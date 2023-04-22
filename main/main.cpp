@@ -2,6 +2,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "LEDdriver.hpp"
+#include "softAP.hpp"
 
 #define NUM_LEDS 4
 
@@ -35,6 +36,8 @@ extern "C" void app_main(void)
         LEDDriver(GPIO_NUM_15, LEDC_TIMER_0, LEDC_CHANNEL_2),
         LEDDriver(GPIO_NUM_2, LEDC_TIMER_0, LEDC_CHANNEL_3)
     };
+
+    wifi_init_softap();
 
     while(true)
     {
