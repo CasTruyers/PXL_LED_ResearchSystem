@@ -1,1 +1,1 @@
-idf_component_register(SRCS "softAP.cpp" "main.cpp" "LEDdriver.cpp" INCLUDE_DIRS ".")
+idf_component_register(SRCS "webserver.cpp" "softAP.cpp" "main.cpp" "LEDdriver.cpp" INCLUDE_DIRS "." )

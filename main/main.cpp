@@ -3,6 +3,7 @@
 #include "freertos/task.h"
 #include "LEDdriver.hpp"
 #include "softAP.hpp"
+#include "webserver.hpp"
 
 #define NUM_LEDS 4
 
@@ -38,6 +39,9 @@ extern "C" void app_main(void)
     };
 
     wifi_init_softap();
+    static httpd_handle_t server = NULL;
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_AP_STAIPASSIGNED, &connect_handler, &server));
+    //ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &server));
 
     while(true)
     {
