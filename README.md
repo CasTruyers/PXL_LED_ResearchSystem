@@ -1,35 +1,30 @@
-| Supported Targets | ESP32 | ESP32-C2 | ESP32-C3 | ESP32-S2 | ESP32-S3 |
-| ----------------- | ----- | -------- | -------- | -------- | -------- |
+# Project Title
 
-# _Sample project_
+## Overview
 
-(See the README.md file in the upper level 'examples' directory for more information about examples.)
+This is a repository for the software development of an ESP32-based LED system designed for research on light spectrum influences on plant growth. The project utilizes the ESP-IDF framework, a widely-used and powerful development platform for programming ESP32 microcontrollers in C/C++.
 
-This is the simplest buildable example. The example is used by command `idf.py create-project`
-that copies the project to user specified path and set it's name. For more information follow the [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project)
+## Features
 
+- Utilizes ESP-IDF framework for programming the ESP32 microcontroller.
+- Implements custom firmware for controlling the LED system.
+- Interaction with LED_Drivers.
+- Programmed in OOP style.
+- Web interface for controlling the light spectrum, intensity, and duration, tailored for research purposes.
+- Offers a user-friendly interface for programming and debugging using popular code editors such as VSCode with the ESP-IDF extension.
 
+## Dependencies
 
-## How to use example
-We encourage the users to use the example as a template for the new projects.
-A recommended way is to follow the instructions on a [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project).
+- ESP-IDF framework: The ESP-IDF library provides a rich set of APIs and tools for developing software on ESP32 microcontrollers, making it easier to write robust, efficient, and high-performance code.
 
-## Example folder contents
+## Getting Started
 
-The project **sample_project** contains one source file in C language [main.c](main/main.c). The file is located in folder [main](main).
+1. Install ESP-IDF framework: Follow the official ESP-IDF documentation to install the framework and set up the development environment.
+2. Clone the repository: Clone this repository to your local machine using Git.
+3. Customize firmware: Modify the code and configurations based on your specific requirements, such as light spectrum, intensity, and duration for your research on plant growth.
+4. Build and flash firmware: Use ESP-IDF tools to build and flash the firmware onto the ESP32 microcontroller.
+5. Monitor and debug: Monitor the output and behavior of the LED system using the ESP-IDF tools for debugging and troubleshooting as needed.
 
-ESP-IDF projects are built using CMake. The project build configuration is contained in `CMakeLists.txt`
-files that provide set of directives and instructions describing the project's source files and targets
-(executable, library, or both). 
+## Contact Information
 
-Below is short explanation of remaining files in the project folder.
-
-```
-├── CMakeLists.txt
-├── main
-│   ├── CMakeLists.txt
-│   └── main.c
-└── README.md                  This is the file you are currently reading
-```
-Additionally, the sample project contains Makefile and component.mk files, used for the legacy Make based build system. 
-They are not used or needed when building with CMake and idf.py.
+For any inquiries or questions regarding this project, please contact Cas.Truyers@outlook.be
