@@ -1,0 +1,60 @@
+# .gitignore for ESP-IDF projects
+
+# Compiled object files
+*.o
+
+# Compiled executables
+*.elf
+*.bin
+
+# Core dump files
+core
+
+# SDK generated files
+build/
+sdkconfig
+sdkconfig.old
+
+# IDE files
+*.cproject
+*.project
+*.settings/
+
+# Debugging files
+*.debug
+*.dep
+*.out
+*.log
+*.dSYM/
+*.swp
+
+# Eclipse specific files
+.metadata/
+
+# VSCode specific files
+.vscode/
+
+# Intellij IDEA specific files
+.idea/
+
+# CMake build directory
+CMakeFiles/
+
+# Custom build output directories
+components/
+
+# Ignore other build artifacts
+*.pyc
+*.pyo
+*.swp
+*.log
+*.tmp
+*.map
+
+# Ignore any other temporary or generated files
+*~
+.DS_Store
+*.bak
+*.backup
+*.tmp
+*.temp
