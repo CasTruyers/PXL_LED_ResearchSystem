@@ -1,144 +1,171 @@
 #include "webserver.hpp"
 
 static const char *TAG = "webserver";
-
-/* An HTTP GET handler */
-static esp_err_t ledOffHandler(httpd_req_t *req)
-{
-    esp_err_t error;
-    gpio_set_level(GPIO_NUM_5, 0);
-    ESP_LOGI(TAG, "LED turned off");
-    const char* response = (const char*) req->user_ctx;
-    error = httpd_resp_send(req, response, strlen(response));
-    if(error != ESP_OK)
-    {
-        ESP_LOGI(TAG, "Error %d while sending response", error);
-    }
-    else ESP_LOGI(TAG, "response sent succesfully");
-
-    return error;
-}
-
-static esp_err_t ledOnHandler(httpd_req_t *req)
-{
-    esp_err_t error;
-    gpio_set_level(GPIO_NUM_5, 1);
-    ESP_LOGI(TAG, "LED turned on");
-    const char* response = (const char*) req->user_ctx;
-    error = httpd_resp_send(req, response, strlen(response));
-    if(error != ESP_OK)
-    {
-        ESP_LOGI(TAG, "Error %d while sending response", error);
-    }
-    else ESP_LOGI(TAG, "response sent succesfully");
-
-    return error;
-}
-
-static const httpd_uri_t ledOff = {
-    .uri       = "/ledOff",
-    .method    = HTTP_GET,
-    .handler   = ledOffHandler,
-    /* Let's pass response string in user
-     * context to demonstrate it's usage */
-    .user_ctx  = const_cast<char*>("\
-    <!DOCTYPE html>\
-    <html>\
-    <head>\
-    <style>\
-    .button {\
-    border: none;\
-    color: white;\
-    padding: 15px 32px;\
-    text-align: center;\
-    text-decoration: none;\
-    display: inline-block;\
-    font-size: 16px;\
-    margin: 4px 2px;\
-    cursor: pointer;\
-    }\
-\
-    .button1 {background-color: #4CAF50;} /* Green */\
-    .button2 {background-color: #008CBA;} /* Blue */\
-    </style>\
-    </head>\
-    <body>\
-\
-    <h1>Led-System</h1>\
-\
-    <button class=\"button button1\" onclick= \"window.location.href='/ledOn'\">LED ON</button>\
-\
-    </body>\
-    </html>\
-")
+int led_state = 0;
+httpd_handle_t server = NULL;
+struct async_resp_arg {
+    httpd_handle_t hd;
+    int fd;
 };
 
-static const httpd_uri_t ledOn = {
-    .uri       = "/ledOn",
-    .method    = HTTP_GET,
-    .handler   = ledOnHandler,
-    /* Let's pass response string in user
-     * context to demonstrate it's usage */
-    .user_ctx  = const_cast<char*>("\
-    <!DOCTYPE html>\
-    <html>\
-    <head>\
-    <style>\
-    .button {\
-    border: none;\
-    color: white;\
-    padding: 15px 32px;\
-    text-align: center;\
-    text-decoration: none;\
-    display: inline-block;\
-    font-size: 16px;\
-    margin: 4px 2px;\
-    cursor: pointer;\
-    }\
-\
-    .button1 {background-color: #4CAF50;} /* Green */\
-    .button2 {background-color: #008CBA;} /* Blue */\
-    </style>\
-    </head>\
-    <body>\
-\
-    <h1>Led-System</h1>\
-\
-    <button class=\"button button2\" onclick= \"window.location.href='/ledOff'\">LED OFF</button>\
-\
-    </body>\
-    </html>\
-")
-};
+#define INDEX_HTML_PATH "/spiffs/index.html"
+char index_html[4096];
+char response_data[4096];
 
-esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err)
+// Read spiff and place index.html in buffer index_html
+static void initi_web_page_buffer(void)
 {
-    /* For any other URI send 404 and close socket */
-    httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "Some 404 error message");
-    return ESP_FAIL;
+    printf("In function \"initi_web_page_buffer\": Read spiff and place index.html in buffer index_html\n\r");
+    esp_vfs_spiffs_conf_t conf = {
+        .base_path = "/spiffs",
+        .partition_label = NULL,
+        .max_files = 5,
+        .format_if_mount_failed = true};
+
+    ESP_ERROR_CHECK(esp_vfs_spiffs_register(&conf));
+
+    memset((void *)index_html, 0, sizeof(index_html));
+    struct stat st;
+    if (stat(INDEX_HTML_PATH, &st))
+    {
+        ESP_LOGE(TAG, "index.html not found");
+        return;
+    }
+
+    FILE *fp = fopen(INDEX_HTML_PATH, "r");
+    if (fread(index_html, st.st_size, 1, fp) == 0)
+    {
+        ESP_LOGE(TAG, "fread failed");
+    }
+    fclose(fp);
 }
 
-static httpd_handle_t start_webserver(void)
+// used to send a web page to the client in response to an HTTP request.
+esp_err_t get_req_handler(httpd_req_t *req)
 {
-    httpd_handle_t server = NULL;
+    int response;
+    if(led_state) sprintf(response_data, index_html, "ON");
+    else sprintf(response_data, index_html, "OFF");
+    response = httpd_resp_send(req, response_data, HTTPD_RESP_USE_STRLEN);
+    return response;
+}
+
+// Toggles LED and send led_state message
+static void ws_async_send(void *arg)
+{
+    httpd_ws_frame_t ws_pkt;
+    struct async_resp_arg *resp_arg = (struct async_resp_arg *) arg;
+    httpd_handle_t hd = resp_arg->hd;
+
+    led_state = !led_state;
+    gpio_set_level(LED_PIN, led_state);
+    
+    char buff[4];
+    memset(buff, 0, sizeof(buff));
+    sprintf(buff, "%d",led_state);
+    
+    memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
+    ws_pkt.payload = (uint8_t *)buff;
+    ws_pkt.len = strlen(buff);
+    ws_pkt.type = HTTPD_WS_TYPE_TEXT;
+    
+    static size_t max_clients = CONFIG_LWIP_MAX_LISTENING_TCP;
+    size_t fds = max_clients;
+    int client_fds[max_clients];
+
+    esp_err_t ret = httpd_get_client_list(server, &fds, client_fds);
+    if (ret != ESP_OK) return;
+
+    for (int i = 0; i < fds; i++) {
+        int client_info = httpd_ws_get_fd_info(server, client_fds[i]);
+        if (client_info == HTTPD_WS_CLIENT_WEBSOCKET) {
+            httpd_ws_send_frame_async(hd, client_fds[i], &ws_pkt);
+        }
+    }
+    free(resp_arg);
+}
+
+static esp_err_t trigger_async_send(httpd_handle_t handle, httpd_req_t *req)
+{
+    struct async_resp_arg *resp_arg = static_cast<async_resp_arg*>(malloc(sizeof(struct async_resp_arg)));
+    resp_arg->hd = req->handle;
+    resp_arg->fd = httpd_req_to_sockfd(req);
+    return httpd_queue_work(handle, ws_async_send, resp_arg);
+}
+
+static esp_err_t handle_ws_req(httpd_req_t *req)
+{
+    if (req->method == HTTP_GET)
+    {
+        ESP_LOGI(TAG, "Handshake done, the new connection was opened");
+        return ESP_OK;
+    }
+    httpd_ws_frame_t ws_pkt;
+    uint8_t *buf = NULL;
+    memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
+    ws_pkt.type = HTTPD_WS_TYPE_TEXT;
+
+    esp_err_t ret = httpd_ws_recv_frame(req, &ws_pkt, 0);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "httpd_ws_recv_frame failed to get frame len with %d", ret);
+        return ret;
+    }
+
+    if (ws_pkt.len)
+    {
+        buf = static_cast<uint8_t*>(calloc(1, ws_pkt.len + 1));
+        if (buf == NULL)
+        {
+            ESP_LOGE(TAG, "Failed to calloc memory for buf");
+            return ESP_ERR_NO_MEM;
+        }
+        ws_pkt.payload = buf; //set to same point as buf
+        ret = httpd_ws_recv_frame(req, &ws_pkt, ws_pkt.len);
+        if (ret != ESP_OK)
+        {
+            ESP_LOGE(TAG, "httpd_ws_recv_frame failed with %d", ret);
+            free(buf);
+            return ret;
+        }
+        ESP_LOGI(TAG, "Got packet with message: %s", ws_pkt.payload);
+    }
+
+    ESP_LOGI(TAG, "frame len is %d", ws_pkt.len);
+
+    if (ws_pkt.type == HTTPD_WS_TYPE_TEXT && strcmp((char *)ws_pkt.payload, "toggle") == 0)
+    {
+        free(buf);
+        return trigger_async_send(req->handle, req);
+    }
+    return ESP_OK;
+}
+
+httpd_handle_t setup_websocket_server(void)
+{
+    printf("In setup_websocket_server\r\n");
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.lru_purge_enable = true;
 
-    // Start the httpd server
-    ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
-    if (httpd_start(&server, &config) == ESP_OK) {
-        // Set URI handlers
-        ESP_LOGI(TAG, "Registering URI handlers");
-        httpd_register_uri_handler(server, &ledOff);
-        httpd_register_uri_handler(server, &ledOn);
-        #if CONFIG_EXAMPLE_BASIC_AUTH
-        httpd_register_basic_auth(server);
-        #endif
-        return server;
+    httpd_uri_t uri_get = {
+        .uri = "/",
+        .method = HTTP_GET,
+        .handler = get_req_handler,
+        .user_ctx = NULL};
+
+    httpd_uri_t ws = {
+        .uri = "/ws",
+        .method = HTTP_GET,
+        .handler = handle_ws_req,
+        .user_ctx = NULL,
+        .is_websocket = true};
+
+    if (httpd_start(&server, &config) == ESP_OK)
+    {
+        httpd_register_uri_handler(server, &uri_get);
+        httpd_register_uri_handler(server, &ws);
     }
-
-    ESP_LOGI(TAG, "Error starting server!");
-    return NULL;
+    printf("server: %p\n\r", server);
+    return server;
 }
 
 static esp_err_t stop_webserver(httpd_handle_t server)
@@ -165,6 +192,8 @@ void connect_handler(void* arg, esp_event_base_t event_base, int32_t event_id, v
     httpd_handle_t* server = (httpd_handle_t*) arg;
     if (*server == NULL) {
         ESP_LOGI(TAG, "Starting webserver");
-        *server = start_webserver();
+        printf("In connect handler\r\n");
+        initi_web_page_buffer();
+        *server = setup_websocket_server();
     }
 }
