@@ -8,8 +8,7 @@ This is a repository for the software development of an ESP32-based LED system d
 
 - Utilizes ESP-IDF framework for programming the ESP32 microcontroller.
 - Implements custom firmware for controlling the LED system.
-- Interaction with LED_Drivers.
-- Programmed in OOP style.
+- Interaction with LED_Drivers in OOP style.
 - Web interface for controlling the light spectrum, intensity, and duration, tailored for research purposes.
 - Offers a user-friendly interface for programming and debugging using popular code editors such as VSCode with the ESP-IDF extension.
 
