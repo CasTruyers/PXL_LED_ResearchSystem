@@ -13,12 +13,11 @@
 #include "protocol_examples_common.h"
 #include "esp_tls_crypto.h"
 #include <esp_http_server.h>
+#include "driver/gpio.h"
 
 #define EXAMPLE_HTTP_QUERY_KEY_MAX_LEN  (64)
 
-void disconnect_handler(void* arg, esp_event_base_t event_base,
-                               int32_t event_id, void* event_data);
-void connect_handler(void* arg, esp_event_base_t event_base,
-                            int32_t event_id, void* event_data);
+void disconnect_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
+void connect_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 
 #endif //WEBSERVER_HPP
