@@ -4,11 +4,14 @@
 #include "driver/ledc.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "stdio.h"
+
+#define NUM_LEDS 4
 
 class LEDDriver {
 public:
     LEDDriver(gpio_num_t gpio, ledc_timer_t timer, ledc_channel_t channel);
-    void setDuty(uint32_t duty);
+    void setDuty(uint8_t duty);
     void fade();
 private:
     gpio_num_t m_gpio;

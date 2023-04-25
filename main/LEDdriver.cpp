@@ -42,9 +42,11 @@ void LEDDriver::initPWM()
 }
 
 // Set the duty cycle for the LED driver
-void LEDDriver::setDuty(uint32_t duty)
+void LEDDriver::setDuty(uint8_t dutyCycle)
 {
-    ledc_set_duty(LEDC_LOW_SPEED_MODE, m_channel, duty);
+    dutyCycle = static_cast<uint8_t>(255 * (dutyCycle/100.0));
+    printf("dutycycle: %d\n\r", dutyCycle);
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, m_channel, dutyCycle);
     ledc_update_duty(LEDC_LOW_SPEED_MODE, m_channel);
 }
 

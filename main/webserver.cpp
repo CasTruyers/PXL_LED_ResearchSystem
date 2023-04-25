@@ -58,7 +58,8 @@ static void ws_async_send(void *arg)
     httpd_handle_t hd = resp_arg->hd;
 
     led_state = !led_state;
-    gpio_set_level(LED_PIN, led_state);
+    if(led_state) LEDDrivers[2].setDuty(50);
+    else LEDDrivers[2].setDuty(0);
     
     char buff[4];
     memset(buff, 0, sizeof(buff));
@@ -133,11 +134,16 @@ static esp_err_t handle_ws_req(httpd_req_t *req)
 
     ESP_LOGI(TAG, "frame len is %d", ws_pkt.len);
 
-    if (ws_pkt.type == HTTPD_WS_TYPE_TEXT && strcmp((char *)ws_pkt.payload, "toggle") == 0)
-    {
-        free(buf);
-        return trigger_async_send(req->handle, req);
-    }
+    uint32_t value = strtoul((const char*)ws_pkt.payload, NULL, 10);
+    printf("websocket payload: %ld\n\r", value);
+    LEDDrivers[2].setDuty(value);
+
+    // if (ws_pkt.type == HTTPD_WS_TYPE_TEXT && strcmp((char *)ws_pkt.payload, "toggle") == 0)
+    // {
+    //     free(buf);
+    //     return trigger_async_send(req->handle, req);
+    // }
+
     return ESP_OK;
 }
 
