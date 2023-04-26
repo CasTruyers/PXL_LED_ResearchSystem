@@ -102,18 +102,27 @@
         <div class="card">
             <h2>ONBOARD LED GPIO2</h2>
             <div class="slider-container">
-                <input type="range" id="slider" class="slider" min="0" max="100" value="0">
+                <input type="range" id="slider1" class="slider" min="0" max="255" value="0">
+                <input type="range" id="slider2" class="slider" min="0" max="255" value="0">
+                <input type="range" id="slider3" class="slider" min="0" max="255" value="0">
+                <input type="range" id="slider4" class="slider" min="0" max="255" value="0">
             </div>
-            <p class="state">Value: <span id="value">0</span></p>
+            <p class="state">Values: <span id="values">0, 0, 0, 0</span></p>
         </div>
     </div>
     </div>
     <script>
         var gateway = `ws://${window.location.hostname}/ws`;
         var websocket;
-        var slider = document.getElementById('slider');
-        var valueSpan = document.getElementById('value');
+        var sliders = [
+            document.getElementById('slider1'),
+            document.getElementById('slider2'),
+            document.getElementById('slider3'),
+            document.getElementById('slider4')
+        ];
+        var valuesSpan = document.getElementById('values');
         window.addEventListener('load', onLoad);
+
         function initWebSocket() {
             console.log('Trying to open a WebSocket connection...');
             websocket = new WebSocket(gateway);
@@ -130,25 +139,33 @@
         }
 
         function onLoad() {
-            slider.addEventListener('input', onSliderChange);
+            for (var i = 0; i < sliders.length; i++) {
+                sliders[i].addEventListener('input', onSliderChange.bind(null, i));
+            }
             initWebSocket();
         }
 
-        function onSliderChange() {
-            var value = slider.value;
-            valueSpan.textContent = value;
-            sendSliderValue(value);
+        function onSliderChange(sliderNum) {
+            var value = sliders[sliderNum].value;
+            valuesSpan.textContent = sliders.map(function (slider) {
+                return slider.value;
+            }).join(', ');
+            sendSliderValue(value, sliderNum);
         }
 
-        function sendSliderValue(value) {
-        if (websocket.readyState === WebSocket.OPEN) {
-            const json = {
-                action: "dutyCycle",
-                dutyCycle: value};
-            const jsonString = JSON.stringify(json);
-            websocket.send(jsonString);
+        function sendSliderValue(val, sliderNum) {
+            if (websocket.readyState === WebSocket.OPEN) {
+                const json = {
+                    action: "dutyCycle",
+                    dutyCycle: {
+                        driver: sliderNum,
+                        value: val
+                    }
+                };
+                const jsonString = JSON.stringify(json);
+                websocket.send(jsonString);
+            }
         }
-}
     </script>
 </body>
 

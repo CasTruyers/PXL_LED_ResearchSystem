@@ -9,8 +9,8 @@ struct async_resp_arg {
 };
 
 #define INDEX_HTML_PATH "/spiffs/index.html"
-char index_html[4096];
-char response_data[4096];
+char index_html[8192];
+char response_data[8192];
 
 // Read spiff and place index.html in buffer index_html
 static void initi_web_page_buffer(void)
@@ -43,11 +43,7 @@ static void initi_web_page_buffer(void)
 // used to send a web page to the client in response to an HTTP request.
 esp_err_t get_req_handler(httpd_req_t *req)
 {
-    int response;
-    if(led_state) sprintf(response_data, index_html, "ON");
-    else sprintf(response_data, index_html, "OFF");
-    response = httpd_resp_send(req, response_data, HTTPD_RESP_USE_STRLEN);
-    return response;
+    return httpd_resp_send(req, index_html, HTTPD_RESP_USE_STRLEN);
 }
 
 // Toggles LED and send led_state message
@@ -136,7 +132,6 @@ static esp_err_t handle_ws_req(httpd_req_t *req)
 
     // Parse JSON string into a cJSON object
     cJSON *object = cJSON_ParseWithLength(reinterpret_cast<const char*>(ws_pkt.payload), ws_pkt.len);
-    printf("Json Parsed\n\r");
 
     if (object == nullptr) {
         printf("Failed to parse JSON string\n\r");
@@ -144,20 +139,21 @@ static esp_err_t handle_ws_req(httpd_req_t *req)
     }
 
     cJSON *action = cJSON_GetObjectItemCaseSensitive(object, "action");
-    printf("Action parsed\n\r");
     if (cJSON_IsString(action)) {
         char* actionValue = action->valuestring;
         printf("Action: %s\n\r", actionValue);
         if(strcmp(actionValue, "dutyCycle") == 0)
         {
             cJSON *dutyCycle = cJSON_GetObjectItem(object, "dutyCycle");
-            uint8_t dutyCycleValue = strtoul(dutyCycle->valuestring, NULL, 10);
-            printf("dutycycle value: %d\n\r", dutyCycleValue);
-            if (dutyCycleValue >= 0 && dutyCycleValue <= 255) LEDDrivers[2].setDuty(dutyCycleValue);
-            else printf("Invalid DutyCycle value: %d\n\r", dutyCycleValue);
+            cJSON *driver = cJSON_GetObjectItem(dutyCycle, "driver");
+            cJSON *value = cJSON_GetObjectItem(dutyCycle, "value");
+            uint8_t driverVal = driver->valueint;
+            uint8_t dutyCycleVal = strtoul(value->valuestring, NULL, 10);
+            printf("driver %d: %d\n\r", driverVal, dutyCycleVal);
+            LEDDrivers[driverVal].setDuty(dutyCycleVal);
         } 
         else printf("action does not exist\n\r");
-    } 
+    }
     else printf("action not found\n\r");
 
     // if (ws_pkt.type == HTTPD_WS_TYPE_TEXT && strcmp((char *)ws_pkt.payload, "toggle") == 0)
