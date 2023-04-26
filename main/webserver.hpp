@@ -21,6 +21,7 @@
 #include "esp_eth.h"
 #include "protocol_examples_common.h"
 #include <esp_http_server.h>
+#include "cJSON.h"
 
 #include "LEDdriver.hpp"
 

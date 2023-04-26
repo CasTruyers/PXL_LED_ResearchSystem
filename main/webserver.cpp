@@ -51,48 +51,48 @@ esp_err_t get_req_handler(httpd_req_t *req)
 }
 
 // Toggles LED and send led_state message
-static void ws_async_send(void *arg)
-{
-    httpd_ws_frame_t ws_pkt;
-    struct async_resp_arg *resp_arg = (struct async_resp_arg *) arg;
-    httpd_handle_t hd = resp_arg->hd;
+// static void ws_async_send(void *arg)
+// {
+//     httpd_ws_frame_t ws_pkt;
+//     struct async_resp_arg *resp_arg = (struct async_resp_arg *) arg;
+//     httpd_handle_t hd = resp_arg->hd;
 
-    led_state = !led_state;
-    if(led_state) LEDDrivers[2].setDuty(50);
-    else LEDDrivers[2].setDuty(0);
+//     led_state = !led_state;
+//     if(led_state) LEDDrivers[2].setDuty(50);
+//     else LEDDrivers[2].setDuty(0);
     
-    char buff[4];
-    memset(buff, 0, sizeof(buff));
-    sprintf(buff, "%d",led_state);
+//     char buff[4];
+//     memset(buff, 0, sizeof(buff));
+//     sprintf(buff, "%d",led_state);
     
-    memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
-    ws_pkt.payload = (uint8_t *)buff;
-    ws_pkt.len = strlen(buff);
-    ws_pkt.type = HTTPD_WS_TYPE_TEXT;
+//     memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
+//     ws_pkt.payload = (uint8_t *)buff;
+//     ws_pkt.len = strlen(buff);
+//     ws_pkt.type = HTTPD_WS_TYPE_TEXT;
     
-    static size_t max_clients = CONFIG_LWIP_MAX_LISTENING_TCP;
-    size_t fds = max_clients;
-    int client_fds[max_clients];
+//     static size_t max_clients = CONFIG_LWIP_MAX_LISTENING_TCP;
+//     size_t fds = max_clients;
+//     int client_fds[max_clients];
 
-    esp_err_t ret = httpd_get_client_list(server, &fds, client_fds);
-    if (ret != ESP_OK) return;
+//     esp_err_t ret = httpd_get_client_list(server, &fds, client_fds);
+//     if (ret != ESP_OK) return;
 
-    for (int i = 0; i < fds; i++) {
-        int client_info = httpd_ws_get_fd_info(server, client_fds[i]);
-        if (client_info == HTTPD_WS_CLIENT_WEBSOCKET) {
-            httpd_ws_send_frame_async(hd, client_fds[i], &ws_pkt);
-        }
-    }
-    free(resp_arg);
-}
+//     for (int i = 0; i < fds; i++) {
+//         int client_info = httpd_ws_get_fd_info(server, client_fds[i]);
+//         if (client_info == HTTPD_WS_CLIENT_WEBSOCKET) {
+//             httpd_ws_send_frame_async(hd, client_fds[i], &ws_pkt);
+//         }
+//     }
+//     free(resp_arg);
+// }
 
-static esp_err_t trigger_async_send(httpd_handle_t handle, httpd_req_t *req)
-{
-    struct async_resp_arg *resp_arg = static_cast<async_resp_arg*>(malloc(sizeof(struct async_resp_arg)));
-    resp_arg->hd = req->handle;
-    resp_arg->fd = httpd_req_to_sockfd(req);
-    return httpd_queue_work(handle, ws_async_send, resp_arg);
-}
+// static esp_err_t trigger_async_send(httpd_handle_t handle, httpd_req_t *req)
+// {
+//     struct async_resp_arg *resp_arg = static_cast<async_resp_arg*>(malloc(sizeof(struct async_resp_arg)));
+//     resp_arg->hd = req->handle;
+//     resp_arg->fd = httpd_req_to_sockfd(req);
+//     return httpd_queue_work(handle, ws_async_send, resp_arg);
+//}
 
 static esp_err_t handle_ws_req(httpd_req_t *req)
 {
@@ -134,15 +134,39 @@ static esp_err_t handle_ws_req(httpd_req_t *req)
 
     ESP_LOGI(TAG, "frame len is %d", ws_pkt.len);
 
-    uint32_t value = strtoul((const char*)ws_pkt.payload, NULL, 10);
-    printf("websocket payload: %ld\n\r", value);
-    LEDDrivers[2].setDuty(value);
+    // Parse JSON string into a cJSON object
+    cJSON *object = cJSON_ParseWithLength(reinterpret_cast<const char*>(ws_pkt.payload), ws_pkt.len);
+    printf("Json Parsed\n\r");
+
+    if (object == nullptr) {
+        printf("Failed to parse JSON string\n\r");
+        return 1;
+    }
+
+    cJSON *action = cJSON_GetObjectItemCaseSensitive(object, "action");
+    printf("Action parsed\n\r");
+    if (cJSON_IsString(action)) {
+        char* actionValue = action->valuestring;
+        printf("Action: %s\n\r", actionValue);
+        if(strcmp(actionValue, "dutyCycle") == 0)
+        {
+            cJSON *dutyCycle = cJSON_GetObjectItem(object, "dutyCycle");
+            uint8_t dutyCycleValue = strtoul(dutyCycle->valuestring, NULL, 10);
+            printf("dutycycle value: %d\n\r", dutyCycleValue);
+            if (dutyCycleValue >= 0 && dutyCycleValue <= 255) LEDDrivers[2].setDuty(dutyCycleValue);
+            else printf("Invalid DutyCycle value: %d\n\r", dutyCycleValue);
+        } 
+        else printf("action does not exist\n\r");
+    } 
+    else printf("action not found\n\r");
 
     // if (ws_pkt.type == HTTPD_WS_TYPE_TEXT && strcmp((char *)ws_pkt.payload, "toggle") == 0)
     // {
     //     free(buf);
     //     return trigger_async_send(req->handle, req);
     // }
+
+    cJSON_Delete(object);
 
     return ESP_OK;
 }

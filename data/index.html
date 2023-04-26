@@ -141,10 +141,14 @@
         }
 
         function sendSliderValue(value) {
-            if (websocket.readyState === WebSocket.OPEN) {
-                websocket.send(value.toString());
-            }
+        if (websocket.readyState === WebSocket.OPEN) {
+            const json = {
+                action: "dutyCycle",
+                dutyCycle: value};
+            const jsonString = JSON.stringify(json);
+            websocket.send(jsonString);
         }
+}
     </script>
 </body>
 
