@@ -4,6 +4,10 @@
 
 This is a repository for the software development of an ESP32-based LED system designed for research on light spectrum influences on plant growth. The project utilizes the ESP-IDF framework, a widely-used and powerful development platform for programming ESP32 microcontrollers in C/C++.
 
+## Weekly Reports
+
+The weekly report of the projects developments can be found [here](./docs/weeklyReport.md)
+
 ## Features
 
 - Utilizes ESP-IDF framework for programming the ESP32 microcontroller.
