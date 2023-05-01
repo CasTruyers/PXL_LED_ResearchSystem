@@ -128,7 +128,7 @@ Due to shorting of pins on the onboard ESP32, I had to come up with the temperar
 
 I participated in the physical presentation of the students projects at the university on thursday 27/04. I placed basil under the lights as demonstration, (not grown under this light).
 
-I was very suprised by the amount of people that were interested in the interested in the project and asked questions. I was there for four hours and almost always busy talking with other students and external visitors. A very fulfilling experience!
+I was very suprised by the amount of people that was interested in the project, a lot of questions have been asked. I was there for four hours and almost always busy talking with other students and external visitors. A very fulfilling experience! My setup can be seen in the image below.
 
 <p align="center">
   <img src="./media/demoSetup.jpeg" alt="Project presentation" width="320" height="400" />
