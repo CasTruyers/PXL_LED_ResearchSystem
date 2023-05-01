@@ -124,7 +124,9 @@ With everything working as a minimum vialiable product, a physical wooden constr
   </tr>
 </table>
 
-I participated in the physical presentation of the students projects at the university on thursday 27/04. I placed basil under the lights as demonstration, (not grown under this light)
+Due to shorting of pins on the onboard ESP32, I had to come up with the temperary solution of using an ESP32 from the labratory. I'm planning on maye fixing/replacing the onboard ESP32. (if there is time left)
+
+I participated in the physical presentation of the students projects at the university on thursday 27/04. I placed basil under the lights as demonstration, (not grown under this light).
 
 I was very suprised by the amount of people that were interested in the interested in the project and asked questions. I was there for four hours and almost always busy talking with other students and external visitors. A very fulfilling experience!
 
