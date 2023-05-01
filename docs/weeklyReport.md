@@ -121,7 +121,7 @@ Work continued on the web-interface. Websockets is being set-up instead of HTTP 
   <img src="./media/webInterface.jpeg" alt="Web interface" width="400" height="600" />
 </p>
 
-With everything working as a minimum vialiable product, a physical wooden construction is being created to demonstrate/start growing:
+With everything working as a minimum viable product, a physical wooden construction is being created to demonstrate/start growing:
 - The wooden construction has been made in the woodworking space in the university 
 - PCB are connected to the wood with nylon standoffs.
 - Wires are cut at the right distance and everything gets connected
