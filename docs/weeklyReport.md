@@ -19,7 +19,9 @@ Research has been done about how to make a suitable LED mount, but more must be 
 
 The first idea is to build multiple small PCBs with the different LEDS mounted and then connect multiple together to create a LED light. But because the goal is to control each light spectrum individually, this design is not possible because the different LEDS are placed together. Next week I will look further in the design of the LED mount system.
 
-![A LED-PCB example](./media/ConceptLEDPCB.png){width=50% height=50%}
+<p align="center">
+  <img src="./media/ConceptLEDPCB.png" alt="A LED-PCB example" width="400" height="300" />
+</p>
 
 The last thing I did this week was testing the ESP32 hardware by programming a simple LED-flash program using the arduino example for esp32.
 
@@ -65,17 +67,23 @@ Knowing with the new research I can make a better understanding of the LED-PCB. 
 
 This week I focused on making the PCB. I made final changes to the PCB design before trying to make it on the protomat S62. The next image is the LED-PCB design. The footprints had to be custom made, based on the recommendations, found in the paper published by luxeon (the LED manufacturer), extra copper is added on the cathode because that is where the most heat is being dissipated. These LEDs are specifically designed for low heat production, so this extra amount of copper can possible be enough. 4 holes are added to have mounting capabilities. 
 
-![LEDPCBSchematic](./media/LEDPCBSchematic.png){width=50% height=50%}
+<p align="center">
+  <img src="./media/LEDPCBSchematic.png" alt="LEDPCBSchematic" width="400" height="400" />
+</p>
 
 Using the protomat S62 and the help of Aldo, I was able to make this PCB today.
 
-![LED PCB](./media/LEDPCB.jpg){width=50% height=50%}
+<p align="center">
+  <img src="./media/LEDPCB.jpg" alt="LED PCB" width="400" height="400" />
+</p>
 
 Because I want to use a commercially available power source of 24V, I ended up going for 7 LEDs per light spectrum. The max voltage drop per LED is 3.3, so there is enough voltage for 7 LEDs in series. I also did final calculations on photon output and illumination area, and 7 LEDs seem to be enough for having sufficient photon output per light spectrum. (The total photon output on full power will be a lot, but because it will be for research, you want to have the possibility to grow on 80% blue and 20% Red for example, so you need high photon output per light spectrum as well for a research focused light). Next table shows the photon output for 7 LEDs per spectrum on full current.
 
 (12 umol/s is enough for one lettuce, 20 umol/s is enough for cherry tomatoes)
 
-![Photon output table](./media/PPFoutput.png){width=50% height=50%}
+<p align="center">
+  <img src="./media/PPFoutput.png" alt="Photon output table" width="400" height="400" />
+</p>
 
 
 ## 25/04/2023
@@ -99,7 +107,9 @@ Work continued on the web-interface. Websockets is being set-up instead of HTTP 
 - Using SPIFFS (Serial Peripheral Interface Flash File System) on the ESP32 for the HTML/CSS/JavaScript files
 - Four sliders control the corresponding LEDs brightness
 
-![Web interface](./media/webInterface.jpeg){width=50% height=50%}
+<p align="center">
+  <img src="./media/webInterface.jpeg" alt="Web interface" width="400" height="600" />
+</p>
 
 With everything working as a minimum vialiable product, a physical wooden construction is being created to demonstrate/start growing:
 - The wooden construction has been made in the woodworking space in the university 
@@ -107,14 +117,20 @@ With everything working as a minimum vialiable product, a physical wooden constr
 - Wires are cut at the right distance and everything gets connected
 - Final test, everything is working!
 
-![project setup](./media/Electronics.jpeg){width=50% height=50%}
-![project setup](./media/LEDPCBsetup.jpeg){width=50% height=50%}
+<table>
+  <tr>
+    <td><img src="./media/Electronics.jpeg" alt="project setup" width="320" height="400" /></td>
+    <td><img src="./media/LEDPCBsetup.jpeg" alt="project setup" width="320" height="400" /></td>
+  </tr>
+</table>
 
 I participated in the physical presentation of the students projects at the university on thursday 27/04. I placed basil under the lights as demonstration, (not grown under this light)
 
 I was very suprised by the amount of people that were interested in the interested in the project and asked questions. I was there for four hours and almost always busy talking with other students and external visitors. A very fulfilling experience!
 
-![Project presentation](./media/demoSetup.jpeg){width=50% height=50%}
+<p align="center">
+  <img src="./media/demoSetup.jpeg" alt="Project presentation" width="320" height="400" />
+</p
 
 On Friday 28/04 I had a meeting for mid-term evaluation of the project.
 
