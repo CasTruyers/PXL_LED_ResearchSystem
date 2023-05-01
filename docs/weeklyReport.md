@@ -6,8 +6,18 @@ Its purpose is to keep the promotor informed about the project’s status.
 
 The date represents the day of adding the weeks information, usually monday or friday.
 
+## Content table
 
-## 03/03/2023
+1. [03/03/2023](#03/03/2023)
+2. [10/03/2023](#10/03/2023)
+3. [17/03/2023](#17/03/2023)
+4. [03/04/2023](#03/04/2023)
+5. [12/04/2023](#12/04/2023)
+6. [18/04/2023](#18/04/2023)
+7. [25/04/2023](#25/04/2023)
+8. [01/05/2023](#01/05/2023)
+
+## 03/03/2023 <a name="03/03/2023"></a>
 
 The first week of the project consisted primarily of collecting documents of the hardware used. 
 
@@ -25,7 +35,7 @@ The first idea is to build multiple small PCBs with the different LEDS mounted a
 
 The last thing I did this week was testing the ESP32 hardware by programming a simple LED-flash program using the arduino example for esp32.
 
-## 10/03/2023
+## 10/03/2023 <a name="10/03/2023"></a>
 
 Started doing research on ESP-IDF framework as alternative to arduino. As it is a framework build native by espressif exclusiv for the ESP32 MCU, it has a lot of advantages.
 
@@ -36,20 +46,20 @@ Started doing research on ESP-IDF framework as alternative to arduino. As it is 
 
 It has a steeper learning curve in the beginning, especially coming from arduino (which im not) because it follows good practice C/C++ code.
 
-## 17/03/2023
+## 17/03/2023 <a name="17/03/2023"></a>
 
 - Setting up programming toolchain for ESP-IDF projects
 - Setting VScode as IDE with ESP-IDF extensions
 - Testing the program and FreeRTOS by programming LED-BLINK task
 - Writing a class (OOP) for the LEDDrivers. Basic methods for controlling the LEDDrivers are added and tested (working)
 
-## 03/04/2023
+## 03/04/2023 <a name="03/04/2023"></a>
 
 This week I did some more research on the LED mount, ideally I would put around 40% far red , 20% deep red, 20% blue, and 20% white. But because I only have 9 LEDs of each light spectrum and they are only 0.6W per LED, its better to use all of them. This way we can also approach the LED light better as research, mixing the total percentage completely by PWM! For later/final iterations (if there is budget and time) we can develop a more efficient LED panel designed on what the average plant and growth stage needs and thus save LEDs. (save blue and white LEDs since they will not be used that much in plant growing)
 
 So there will be 9 LEDs of each far-red(720-740nm), deep red(650-670), royal blue(440-455) and white. This gives a total of 36 LEDs. With each led approximately 0.6W, the total wattage is 22W (If all LEDs are emitting their light spectrum, which will not be the case if used correctly). Which is not a lot, but enough to grow a lettuce for research.
 
-## 12/04/2023
+## 12/04/2023 <a name="12/04/2023"></a>
 
 Programming: 
 With the programming environment set up, I wrote code for testing all the LED drivers together. I’m trying to program it in an object oriented style using C++. I encapsulated the LED-drivers in its own class and made methods to control them. Also general functions to call these methodes and, for example, fade in and out together to test the drivers. This was all successful. The ESP-IDF framework works on FreeRtos and you can use all the FreeRtos functionality in your code for task scheduling. Next programming step is to acces the class over a web interface. 
@@ -63,7 +73,7 @@ I was planning on making the LED PCB last week but ended up doing more research 
 LED-PCB
 Knowing with the new research I can make a better understanding of the LED-PCB. The purpose of the LED-PCB will be research, since it will not have a big light output and or cover area to grow a lot of plants. So knowing the units of measurements and how much each light spectrum can emit, I can make a research web page that shows live approximated data like PPF/PPFD and DLI for each led spectrum and total. I hope this week I will be able to make the LED-PCB to start growing ASAP.
 
-## 18/04/2023
+## 18/04/2023 <a name="18/04/2023"></a>
 
 This week I focused on making the PCB. I made final changes to the PCB design before trying to make it on the protomat S62. The next image is the LED-PCB design. The footprints had to be custom made, based on the recommendations, found in the paper published by luxeon (the LED manufacturer), extra copper is added on the cathode because that is where the most heat is being dissipated. These LEDs are specifically designed for low heat production, so this extra amount of copper can possible be enough. 4 holes are added to have mounting capabilities. 
 
@@ -86,7 +96,7 @@ Because I want to use a commercially available power source of 24V, I ended up g
 </p>
 
 
-## 25/04/2023
+## 25/04/2023 <a name="25/04/2023"></a>
 
 This week I finished the PCB-LED. All 4 LED spectrums are soldered on the PCB and tested.
 
@@ -94,7 +104,7 @@ Work has also been done on the ESP32. A webserver has been set up that successfu
 
 This week I will focus primary on that, making the web interface. And make a small set-up for the LED-light under a plant for demonstration on 27/04 in the campus. For this the LED-Drivers also need to be adjusted for the correct current per light spectrum and soldered to the pads.
 
-## 1/05/2023
+## 01/05/2023 <a name="01/05/2023"></a>
 
 Working closer to the deadline for the physical presentation at the Lapland AMK on thursday 27/04, a lot of work has been done this week.
 
