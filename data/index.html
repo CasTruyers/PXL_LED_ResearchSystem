@@ -88,6 +88,14 @@
             color: #120707;
             font-weight: bold;
         }
+
+        .info-box {
+        background-color: #f5f5f5;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 10px;
+        margin-top: 20px;
+    }
     </style>
     <title>ESP32 Web Server</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -96,18 +104,33 @@
 
 <body>
     <div class="topnav">
-        <h1>ESP32 WebSocket Server</h1>
+        <h1>LED-SYSTEM</h1>
     </div>
     <div class="content">
         <div class="card">
-            <h2>ONBOARD LED GPIO2</h2>
+            <h2>Duty-Cycle</h2>
             <div class="slider-container">
+                <label for="slider1">FAR RED</label>
                 <input type="range" id="slider1" class="slider" min="0" max="255" value="0">
+                <label for="slider1">DEEP RED</label>
                 <input type="range" id="slider2" class="slider" min="0" max="255" value="0">
+                <label for="slider1">WHITE</label>
                 <input type="range" id="slider3" class="slider" min="0" max="255" value="0">
+                <label for="slider1">ROYAL BLUE</label>
                 <input type="range" id="slider4" class="slider" min="0" max="255" value="0">
             </div>
             <p class="state">Values: <span id="values">0, 0, 0, 0</span></p>
+        </div>
+        <div class="info-box">
+            <h3>System Information</h3>
+            <p><strong>Temperature:</strong> 23&deg;C</p>
+            <p><strong>Humidity:</strong> 63%</p>
+            <br>
+            <p><strong>Total PPF:</strong> ... uMol/s</p>
+            <p><strong>Far Red (720-740nm) PPF:</strong> ... uMol/s</p>
+            <p><strong>Deep Red (650-670nm) PPF:</strong> ... uMol/s</p>
+            <p><strong>White (full spectrum) PPF:</strong> ... uMol/s</p>
+            <p><strong>Royal Blue (440-455nm) PPF:</strong> ... uMol/s</p>
         </div>
     </div>
     </div>
