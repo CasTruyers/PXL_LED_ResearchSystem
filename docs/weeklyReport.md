@@ -130,9 +130,10 @@ I participated in the physical presentation of the students projects at the univ
 
 I was very suprised by the amount of people that were interested in the interested in the project and asked questions. I was there for four hours and almost always busy talking with other students and external visitors. A very fulfilling experience!
 
+On Friday 28/04 I had a meeting for mid-term evaluation of the project. My setup can be seen in the image below.
+
 <p align="center">
   <img src="./media/demoSetup.jpeg" alt="Project presentation" width="320" height="400" />
-</p
+</p>
 
-On Friday 28/04 I had a meeting for mid-term evaluation of the project.
 
