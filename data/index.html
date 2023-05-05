@@ -126,11 +126,11 @@
             <p><strong>Temperature:</strong> 23&deg;C</p>
             <p><strong>Humidity:</strong> 63%</p>
             <br>
-            <p><strong>Total PPF:</strong> ... uMol/s</p>
-            <p><strong>Far Red (720-740nm) PPF:</strong> ... uMol/s</p>
-            <p><strong>Deep Red (650-670nm) PPF:</strong> ... uMol/s</p>
-            <p><strong>White (full spectrum) PPF:</strong> ... uMol/s</p>
-            <p><strong>Royal Blue (440-455nm) PPF:</strong> ... uMol/s</p>
+            <p><strong>Total PPF:</strong> <span id="total-ppf">0</span> uMol/s</p>
+            <p><strong>Far Red (720-740nm) PPF:</strong> <span id="far-red-ppf">0</span> uMol/s, resistor: 6800 Ohms, max current: 300, estimated current: 160 mA, calculated current: </p>
+            <p><strong>Deep Red (650-670nm) PPF:</strong> <span id="deep-red-ppf">0</span> uMol/s, resistor: 6800 Ohms, max current: 250, estimated current: 160 mA, calculated current: </p>
+            <p><strong>White (full spectrum) PPF:</strong> <span id="white-ppf">0</span> uMol/s, resistor: 6800 Ohms, max current: 480, estimated current: 160 mA, calculated current: </p>
+            <p><strong>Royal Blue (440-455nm) PPF:</strong> <span id="royal-blue-ppf">0</span> uMol/s, resistor: 6800 Ohms, mac current: 240, estimated current: 160 mA, calculated current: </p>
         </div>
     </div>
     </div>
@@ -174,6 +174,7 @@
                 return slider.value;
             }).join(', ');
             sendSliderValue(value, sliderNum);
+            calculatePPF();
         }
 
         function sendSliderValue(val, sliderNum) {
@@ -189,6 +190,36 @@
                 websocket.send(jsonString);
             }
         }
+
+        function calculatePPF() {
+            var farRed = sliders[0].value;
+            var deepRed = sliders[1].value;
+            var white = sliders[2].value;
+            var royalBlue = sliders[3].value;
+            
+            //Function to fine tune PPF estimation
+            var farRedPPF = farRed;
+            var deepRedPPF = deepRed;
+            var whitePPF = white;
+            var royalBluePPF = royalBlue;
+            const totalPPF = parseInt(farRedPPF) + parseInt(deepRedPPF) + parseInt(whitePPF) + parseInt(royalBluePPF);
+
+            var farRedPPFElement = document.querySelector("#far-red-ppf");
+            farRedPPFElement.textContent = farRedPPF;
+
+            var deepRedPPFElement = document.querySelector("#deep-red-ppf");
+            deepRedPPFElement.textContent = deepRedPPF;
+
+            var whitePPFElement = document.querySelector("#white-ppf");
+            whitePPFElement.textContent = whitePPF;
+
+            var royalBluePPFElement = document.querySelector("#royal-blue-ppf");
+            royalBluePPFElement.textContent = royalBluePPF;
+
+            var totalPPFElement = document.querySelector("#total-ppf");
+            totalPPFElement.textContent = totalPPF;
+        }
+
     </script>
 </body>
 
