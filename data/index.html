@@ -132,11 +132,11 @@
             <p><strong>White (full spectrum) PPF:</strong> <span id="white-ppf">0</span> uMol/s, resistor: 6800 Ohms, max current: 480, estimated current: 160 mA, calculated current: </p>
             <p><strong>Royal Blue (440-455nm) PPF:</strong> <span id="royal-blue-ppf">0</span> uMol/s, resistor: 6800 Ohms, mac current: 240, estimated current: 160 mA, calculated current: </p>
             <br>
-            <label for="on-time">On time:</label>
-            <input type="text" id="on-time" name="on-time" placeholder="hh:mm">
-            <label for="off-time">Off time:</label>
-            <input type="text" id="off-time" name="off-time" placeholder="hh:mm">
-            <button onclick="saveTimes()">Save</button>
+            <p><label for="on-time">On time:</label>
+            <input type="text" id="on-time" name="on-time" placeholder="hh:mm"></p>
+            <p><label for="off-time">Off time:</label>
+            <input type="text" id="off-time" name="off-time" placeholder="hh:mm"></p>
+            <p><button onclick="saveTimes()">Save</button></p>
         </div>
     </div>
     </div>
@@ -151,6 +151,18 @@
         ];
         var valuesSpan = document.getElementById('values');
         window.addEventListener('load', onLoad);
+
+        const payload = {
+            action: "",
+            dutyCycle: {
+                driver: 0,
+                value: ""
+            },
+            setTime: {
+                onTime: "",
+                offTime: ""
+            }
+        };
 
         function initWebSocket() {
             console.log('Trying to open a WebSocket connection...');
@@ -184,16 +196,12 @@
         }
 
         function sendSliderValue(val, sliderNum) {
+            //Fill in JSON and send to ESP32 over websocket
             if (websocket.readyState === WebSocket.OPEN) {
-                const json = {
-                    action: "dutyCycle",
-                    dutyCycle: {
-                        driver: sliderNum,
-                        value: val
-                    }
-                };
-                const jsonString = JSON.stringify(json);
-                websocket.send(jsonString);
+                payload.action = "dutyCycle";
+                payload.dutyCycle.driver = sliderNum;
+                payload.dutyCycle.value = val;
+                websocket.send(JSON.stringify(payload));
             }
         }
 
@@ -236,15 +244,11 @@
         }
 
         function sendTimesToEsp32(onTime, offTime) {
-            // handle the WebSocket connection event
+            //Fill in JSON and send to ESP32 over websocket
             if (websocket.readyState === WebSocket.OPEN) {
-                // construct a JSON payload containing the on/off times
-                const payload = {
-                    on_time: onTime,
-                    off_time: offTime
-                };
-
-                // send the JSON payload to the ESP32
+                payload.action = "setTime";
+                payload.setTime.onTime = onTime;
+                payload.setTime.offTime = offTime;
                 websocket.send(JSON.stringify(payload));
             };
         }

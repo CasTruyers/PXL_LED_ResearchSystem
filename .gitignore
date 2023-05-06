@@ -12,7 +12,7 @@ core
 
 # SDK generated files
 build/
-sdkconfig
+#sdkconfig
 sdkconfig.old
 
 # IDE files

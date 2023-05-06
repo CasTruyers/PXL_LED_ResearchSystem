@@ -152,6 +152,20 @@ static esp_err_t handle_ws_req(httpd_req_t *req)
             printf("driver %d: %d\n\r", driverVal, dutyCycleVal);
             LEDDrivers[driverVal].setDuty(dutyCycleVal);
         } 
+        else if(strcmp(actionValue, "setTime") == 0)
+        {
+            cJSON *dutyCycle = cJSON_GetObjectItem(object, "setTime");
+            cJSON *onTime = cJSON_GetObjectItem(dutyCycle, "onTime");
+            cJSON *offTime = cJSON_GetObjectItem(dutyCycle, "offTime");
+            printf("saving onTime:  %s and offTime: %s to the NVS\n\r", onTime->valuestring, offTime->valuestring);
+            save_on_time(onTime->valuestring);
+            save_off_time(offTime->valuestring);
+
+            char onTimeStr[6], offTimeStr[6];
+            load_on_time(onTimeStr, sizeof(onTimeStr)); 
+            load_off_time(offTimeStr, sizeof(offTimeStr)); 
+            printf("first Loaded onTime: %s and offTime: %s to the NVS\n\r", onTimeStr, offTimeStr);
+        }
         else printf("action does not exist\n\r");
     }
     else printf("action not found\n\r");
