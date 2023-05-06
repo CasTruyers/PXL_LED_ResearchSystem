@@ -131,6 +131,12 @@
             <p><strong>Deep Red (650-670nm) PPF:</strong> <span id="deep-red-ppf">0</span> uMol/s, resistor: 6800 Ohms, max current: 250, estimated current: 160 mA, calculated current: </p>
             <p><strong>White (full spectrum) PPF:</strong> <span id="white-ppf">0</span> uMol/s, resistor: 6800 Ohms, max current: 480, estimated current: 160 mA, calculated current: </p>
             <p><strong>Royal Blue (440-455nm) PPF:</strong> <span id="royal-blue-ppf">0</span> uMol/s, resistor: 6800 Ohms, mac current: 240, estimated current: 160 mA, calculated current: </p>
+            <br>
+            <label for="on-time">On time:</label>
+            <input type="text" id="on-time" name="on-time" placeholder="hh:mm">
+            <label for="off-time">Off time:</label>
+            <input type="text" id="off-time" name="off-time" placeholder="hh:mm">
+            <button onclick="saveTimes()">Save</button>
         </div>
     </div>
     </div>
@@ -218,6 +224,29 @@
 
             var totalPPFElement = document.querySelector("#total-ppf");
             totalPPFElement.textContent = totalPPF;
+        }
+
+        function saveTimes() {
+            // get the values of the on/off time input fields
+            const onTime = document.getElementById('on-time').value;
+            const offTime = document.getElementById('off-time').value;
+
+            // send the on/off times to the ESP32 over WebSocket
+            sendTimesToEsp32(onTime, offTime);
+        }
+
+        function sendTimesToEsp32(onTime, offTime) {
+            // handle the WebSocket connection event
+            if (websocket.readyState === WebSocket.OPEN) {
+                // construct a JSON payload containing the on/off times
+                const payload = {
+                    on_time: onTime,
+                    off_time: offTime
+                };
+
+                // send the JSON payload to the ESP32
+                websocket.send(JSON.stringify(payload));
+            };
         }
 
     </script>

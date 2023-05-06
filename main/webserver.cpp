@@ -9,8 +9,8 @@ struct async_resp_arg {
 };
 
 #define INDEX_HTML_PATH "/spiffs/index.html"
-char index_html[8192];
-char response_data[8192];
+char index_html[10000];
+char response_data[10000];
 
 // Read spiff and place index.html in buffer index_html
 static void initi_web_page_buffer(void)
