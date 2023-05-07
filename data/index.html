@@ -152,11 +152,21 @@
         var valuesSpan = document.getElementById('values');
         window.addEventListener('load', onLoad);
 
-        const payload = {
+        let payload = {
             action: "",
-            dutyCycle: {
-                driver: 0,
-                value: ""
+            drivers: {
+                firstDriver: {
+                    dutyCycle: "0"
+                },
+                secondDriver: {
+                    dutyCycle: "0"
+                },
+                thirdDriver: {
+                    dutyCycle: "0"
+                },
+                fourthDriver: {
+                    dutyCycle: "0"
+                },
             },
             setTime: {
                 onTime: "",
@@ -170,37 +180,70 @@
             websocket.onopen = function (event) {
                 console.log('WebSocket connection opened:', event);
             };
-            websocket.onmessage = function (event) {
-                console.log('WebSocket message received:', event);
+            websocket.onmessage = function(event) {
+                onMessage(event);
             };
+                
             websocket.onclose = function (event) {
                 console.log('WebSocket connection closed:', event);
                 setTimeout(initWebSocket, 2000);
             };
         }
 
-        function onLoad() {
-            for (var i = 0; i < sliders.length; i++) {
-                sliders[i].addEventListener('input', onSliderChange.bind(null, i));
-            }
-            initWebSocket();
-        }
-
-        function onSliderChange(sliderNum) {
-            var value = sliders[sliderNum].value;
+        function updateSliderText()
+        {
             valuesSpan.textContent = sliders.map(function (slider) {
                 return slider.value;
             }).join(', ');
-            sendSliderValue(value, sliderNum);
+        }
+
+        function onMessage()
+        {
+            console.log('WebSocket message received:', event);
+            const jsonObj = JSON.parse(event.data);
+            if(jsonObj.action == "dutyCycle")
+            {
+                const driversJson = jsonObj.drivers;
+                payload.drivers.firstDriver.dutyCycle = driversJson.firstDriver.dutyCycle
+                payload.drivers.secondDriver.dutyCycle = driversJson.secondDriver.dutyCycle
+                payload.drivers.thirdDriver.dutyCycle = driversJson.thirdDriver.dutyCycle
+                payload.drivers.fourthDriver.dutyCycle = driversJson.fourthDriver.dutyCycle
+                
+                sliders[0].value = payload.drivers.firstDriver.dutyCycle;
+                sliders[1].value = payload.drivers.secondDriver.dutyCycle;
+                sliders[2].value = payload.drivers.thirdDriver.dutyCycle;
+                sliders[3].value = payload.drivers.fourthDriver.dutyCycle;
+                updateSliderText();
+            }
+            else if(jsonObj.action == "setTime")
+            {
+                //add code
+            }
+            else console.log("unknown action: ", jsonObj.action);
+        }
+
+        function onLoad() {
+            for (var i = 0; i < sliders.length; i++) {
+                sliders[i].addEventListener('change', onSliderChange.bind(null, i));
+            }
+            initWebSocket();
+            
+        }
+
+        function onSliderChange(sliderNum) {
+            updateSliderText();
+            sendSliderValue(sliderNum);
             calculatePPF();
         }
 
-        function sendSliderValue(val, sliderNum) {
+        function sendSliderValue(sliderNum) {
             //Fill in JSON and send to ESP32 over websocket
             if (websocket.readyState === WebSocket.OPEN) {
                 payload.action = "dutyCycle";
-                payload.dutyCycle.driver = sliderNum;
-                payload.dutyCycle.value = val;
+                payload.drivers.firstDriver.dutyCycle = sliders[0].value;
+                payload.drivers.secondDriver.dutyCycle = sliders[1].value;
+                payload.drivers.thirdDriver.dutyCycle = sliders[2].value;
+                payload.drivers.fourthDriver.dutyCycle = sliders[3].value;
                 websocket.send(JSON.stringify(payload));
             }
         }
