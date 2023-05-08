@@ -155,3 +155,4 @@ On Friday 28/04 I had a teams meeting for mid-term evaluation of the project.
 - Now that I'm working with NVS, I also started to put the driver dutycycle values in the NVS. Later will be used for restoring values after power loss/reboot
 - I changed/added functions/data-structures to make my program ready for the upcoming funtionalities.
 - Clients are synchronized, when i change something on the web interface, that information get send to every client connected to the ESP32 and the web interface of every client will get updated accordingly. (sliders will change on every webinterface when one changes)
+- Added JavaScript function to show PPF output of each light spectra and total PPF output, but this is just 1=1, need to measure/calculate the right formula for having an estimated PPF output.
