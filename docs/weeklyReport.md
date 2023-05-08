@@ -154,4 +154,4 @@ On Friday 28/04 I had a teams meeting for mid-term evaluation of the project.
 - Added the funtionality to send "on-time" and "off-time" through the web-interface to the MCU. Values get stored in the NVS (non-volatile storage). This will be used later to control the day/night cycles, first RTC has to be set up.
 - Now that I'm working with NVS, I also started to put the driver dutycycle values in the NVS. Later will be used for restoring values after power loss/reboot
 - I changed/added functions/data-structures to make my program ready for the upcoming funtionalities.
-- Clients are synchronized, when i change something on the web interface, that information get send to every client connected to the ESP32 and the web interface of every client will get updated accordingly. (sliders will change on every webinterface when one changes it)
+- Clients are synchronized, when i change something on the web interface, that information get send to every client connected to the ESP32 and the web interface of every client will get updated accordingly. (sliders will change on every webinterface when one changes)
