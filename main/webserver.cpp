@@ -15,20 +15,29 @@ char response_data[20000];
 void setDrivers(cJSON *driversJson, bool readNVS)
 {
     printf("Setting drivers\n\r");
-    // if(readNVS)
-    // {
-    //     cJSON *driversJson = cJSON_CreateObject();
-    //     nvs_load_drivers(driversJson)
-    // }
-    cJSON *firstDriverDC = cJSON_GetObjectItem(cJSON_GetObjectItem(driversJson, "firstDriver"), "dutyCycle");
-    cJSON *secondDriverDC = cJSON_GetObjectItem(cJSON_GetObjectItem(driversJson, "secondDriver"), "dutyCycle");
-    cJSON *thirdDriverDC = cJSON_GetObjectItem(cJSON_GetObjectItem(driversJson, "thirdDriver"), "dutyCycle");
-    cJSON *fourthDriverDC = cJSON_GetObjectItem(cJSON_GetObjectItem(driversJson, "fourthDriver"), "dutyCycle");
+    if(readNVS)
+    {
+        printf("Reading NVS for drivers DC\n\r");
+        nvs_load_drivers(driversJson);
+        printf("%s",cJSON_Print(driversJson));
+    }
+    else nvs_save_drivers(driversJson);
 
-    LEDDrivers[0].setDuty(strtoul(firstDriverDC->valuestring, NULL, 10));
-    LEDDrivers[1].setDuty(strtoul(secondDriverDC->valuestring, NULL, 10));
-    LEDDrivers[2].setDuty(strtoul(thirdDriverDC->valuestring, NULL, 10));
-    LEDDrivers[3].setDuty(strtoul(fourthDriverDC->valuestring, NULL, 10));
+    cJSON *first_driver_dc_obj = cJSON_GetObjectItem(cJSON_GetObjectItem(driversJson, "firstDriver"), "dutyCycle");
+    cJSON *second_driver_dc_obj = cJSON_GetObjectItem(cJSON_GetObjectItem(driversJson, "secondDriver"), "dutyCycle");
+    cJSON *third_driver_dc_obj = cJSON_GetObjectItem(cJSON_GetObjectItem(driversJson, "thirdDriver"), "dutyCycle");
+    cJSON *fourth_driver_dc_obj = cJSON_GetObjectItem(cJSON_GetObjectItem(driversJson, "fourthDriver"), "dutyCycle");
+    const uint8_t first_driver_dc = strtoul(first_driver_dc_obj->valuestring, NULL, 10);
+    const uint8_t second_driver_dc = strtoul(second_driver_dc_obj->valuestring, NULL, 10);
+    const uint8_t third_driver_dc = strtoul(third_driver_dc_obj->valuestring, NULL, 10);
+    const uint8_t fourth_driver_dc = strtoul(fourth_driver_dc_obj->valuestring, NULL, 10);
+
+    printf("Setting drivers DC1: %d, DC2: %d, DC3:%d, DC4: %d\n\r", first_driver_dc, second_driver_dc, third_driver_dc, fourth_driver_dc);
+
+    LEDDrivers[0].setDuty(first_driver_dc);
+    LEDDrivers[1].setDuty(second_driver_dc);
+    LEDDrivers[2].setDuty(third_driver_dc);
+    LEDDrivers[3].setDuty(fourth_driver_dc);
     printf("Drivers Set\n\r");
 }
 
@@ -63,6 +72,9 @@ static void initi_web_page_buffer(void)
 // used to send a web page to the client in response to an HTTP request.
 esp_err_t get_req_handler(httpd_req_t *req)
 {
+    cJSON *driversJson = cJSON_CreateObject();
+    setDrivers(driversJson, 1);
+    printf("%s\n\r", cJSON_Print(driversJson));
     return httpd_resp_send(req, index_html, HTTPD_RESP_USE_STRLEN);
 }
 
@@ -147,11 +159,7 @@ static esp_err_t handle_ws_req(httpd_req_t *req)
         if(strcmp(actionValue, "dutyCycle") == 0)
         {
             send_json_to_all_clients(req->handle, object);
-            printf("Parsing Json\n\r");
             cJSON *driversJson = cJSON_GetObjectItem(object, "drivers");
-            printf("JSON parsed\n\r");
-            nvs_save_drivers(driversJson);
-            printf("NVS saved\n\r");
             setDrivers(driversJson, 0);
         } 
         else if(strcmp(actionValue, "setTime") == 0)

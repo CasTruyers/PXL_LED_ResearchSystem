@@ -27,14 +27,10 @@ void nvs_load_time(cJSON *setTime, size_t max_length) {
     ESP_ERROR_CHECK(err);
 
     err = nvs_get_str(handle, "on_time", on_time, &max_length);
-    if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) {
-        ESP_ERROR_CHECK(err);
-    }
+    if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) ESP_ERROR_CHECK(err);
 
     err = nvs_get_str(handle, "off_time", off_time, &max_length);
-    if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) {
-        ESP_ERROR_CHECK(err);
-    }
+    if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) ESP_ERROR_CHECK(err);
 
     cJSON_AddStringToObject(setTime, "onTime", on_time);
     cJSON_AddStringToObject(setTime, "offTime", off_time);
@@ -79,7 +75,6 @@ void nvs_save_drivers(cJSON *driversJson)
     cJSON *secondDriverDC = cJSON_GetObjectItem(cJSON_GetObjectItem(driversJson, "secondDriver"), "dutyCycle");
     cJSON *thirdDriverDC = cJSON_GetObjectItem(cJSON_GetObjectItem(driversJson, "thirdDriver"), "dutyCycle");
     cJSON *fourthDriverDC = cJSON_GetObjectItem(cJSON_GetObjectItem(driversJson, "fourthDriver"), "dutyCycle");
-    //printf("%s\t%s\t%s\t%s", firstDriverDC->valuestring, secondDriverDC->valuestring, thirdDriverDC->valuestring, fourthDriverDC->valuestring);
 
     err = nvs_set_str(handle, "firstDriverDC", firstDriverDC->valuestring);
     ESP_ERROR_CHECK(err);
@@ -96,7 +91,55 @@ void nvs_save_drivers(cJSON *driversJson)
     nvs_close(handle);
 }
 
-// void nvs_load_dutyCycle(cJSON *root, size_t max_length)
-// {
+void nvs_load_drivers(cJSON *drivers)
+{
+    nvs_handle_t handle;
+    esp_err_t err = nvs_open("storage", NVS_READWRITE, &handle);
+    ESP_ERROR_CHECK(err);
 
-// }
+    cJSON *first_driver_dc_obj = cJSON_CreateObject();
+    cJSON *second_driver_dc_obj = cJSON_CreateObject();
+    cJSON *third_driver_dc_obj = cJSON_CreateObject();
+    cJSON *fourth_driver_dc_obj = cJSON_CreateObject();
+
+    char first_driver_dc[4] = "0";
+    char second_driver_dc[4] = "0";
+    char third_driver_dc[4] = "0";
+    char fourth_driver_dc[4] = "0";
+    size_t max_length = sizeof(first_driver_dc);
+
+    err = nvs_get_str(handle, "firstDriverDC", first_driver_dc, &max_length);
+    if (err == ESP_ERR_NVS_NOT_FOUND) {
+        printf("\n\rsetting default first_driver_dc value in NVS");
+        err = nvs_set_str(handle, "firstDriverDC", first_driver_dc);
+        if (err != ESP_OK) printf("ERROR");}
+
+    err = nvs_get_str(handle, "secondDriverDC", second_driver_dc, &max_length);
+    if (err == ESP_ERR_NVS_NOT_FOUND) {
+        printf("\n\rsetting default second_driver_dc value in NVS\n\r");
+        err = nvs_set_str(handle, "secondDriverDC", second_driver_dc);
+        if (err != ESP_OK) printf("ERROR");}
+
+    err = nvs_get_str(handle, "thirdDriverDC", third_driver_dc, &max_length);
+    if (err == ESP_ERR_NVS_NOT_FOUND) {
+        printf("\n\rsetting default third_driver_dc value in NVS\n\r");
+        err = nvs_set_str(handle, "thirdDriverDC", third_driver_dc);
+        if (err != ESP_OK) printf("ERROR");}
+
+    err = nvs_get_str(handle, "fourthDriverDC", fourth_driver_dc, &max_length);
+    if (err == ESP_ERR_NVS_NOT_FOUND) {
+        printf("\n\rsetting default fourth_driver_dc value in NVS\n\r");
+        err = nvs_set_str(handle, "fourthDriverDC", fourth_driver_dc);
+        if (err != ESP_OK) printf("ERROR\n\r");}
+
+    cJSON_AddStringToObject(first_driver_dc_obj, "dutyCycle", first_driver_dc);
+    cJSON_AddStringToObject(second_driver_dc_obj, "dutyCycle", second_driver_dc);
+    cJSON_AddStringToObject(third_driver_dc_obj, "dutyCycle", third_driver_dc);
+    cJSON_AddStringToObject(fourth_driver_dc_obj, "dutyCycle", fourth_driver_dc);
+    cJSON_AddItemToObject(drivers, "firstDriver", first_driver_dc_obj);
+    cJSON_AddItemToObject(drivers, "secondDriver", second_driver_dc_obj);
+    cJSON_AddItemToObject(drivers, "thirdDriver", third_driver_dc_obj);
+    cJSON_AddItemToObject(drivers, "fourthDriver", fourth_driver_dc_obj);
+
+    nvs_close(handle);
+}
