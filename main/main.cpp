@@ -5,29 +5,6 @@
 #include "webserver.hpp"
 #include "LEDdriver.hpp"
 
-// create the LED drivers
-LEDDriver LEDDrivers[NUM_LEDS] = {
-    LEDDriver(GPIO_NUM_15, LEDC_TIMER_0, LEDC_CHANNEL_0),
-    LEDDriver(GPIO_NUM_5, LEDC_TIMER_0, LEDC_CHANNEL_1),
-    LEDDriver(GPIO_NUM_18, LEDC_TIMER_0, LEDC_CHANNEL_2),
-    LEDDriver(GPIO_NUM_19, LEDC_TIMER_0, LEDC_CHANNEL_3)
-};
-
-void fadeAll(LEDDriver* leds) {
-    for (float dutyCycle = 0; dutyCycle < 100; dutyCycle++) {
-        for (int j = 0; j < NUM_LEDS; j++) {
-            leds[j].setDuty(dutyCycle);
-        }
-        vTaskDelay(pdMS_TO_TICKS(25));
-    }
-    for (float dutyCycle = 100; dutyCycle > 0; dutyCycle--) {
-        for (int j = 0; j < NUM_LEDS; j++) {
-            leds[j].setDuty(dutyCycle);
-        }
-        vTaskDelay(pdMS_TO_TICKS(25));
-    }
-}
-
 extern "C" void app_main(void)
 {   
     static httpd_handle_t server = NULL;
@@ -36,6 +13,16 @@ extern "C" void app_main(void)
     esp_rom_gpio_pad_select_gpio(GPIO_NUM_5);
     esp_rom_gpio_pad_select_gpio(GPIO_NUM_18);
     esp_rom_gpio_pad_select_gpio(GPIO_NUM_19);
+
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+      ESP_ERROR_CHECK(nvs_flash_erase());
+      ret = nvs_flash_init();
+    }
+    
+    // Read/initialize the drivers NVS and set drivers dutycycle accordingly
+    cJSON *driversJson = cJSON_CreateObject();
+    setDrivers(driversJson, 1);
 
     wifi_init_softap();
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_AP_STAIPASSIGNED, &connect_handler, &server));

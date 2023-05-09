@@ -1,7 +1,6 @@
 <html>
-
 <head>
-    <title>ESP32 Web Server</title>
+    <title>LED SYSTEM</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:,">
     <style>
@@ -97,9 +96,6 @@
         margin-top: 20px;
     }
     </style>
-    <title>ESP32 Web Server</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" href="data:,">
 </head>
 
 <body>
@@ -112,11 +108,11 @@
             <div class="slider-container">
                 <label for="slider1">FAR RED</label>
                 <input type="range" id="slider1" class="slider" min="0" max="255" value="0">
-                <label for="slider1">DEEP RED</label>
+                <label for="slider2">DEEP RED</label>
                 <input type="range" id="slider2" class="slider" min="0" max="255" value="0">
-                <label for="slider1">WHITE</label>
+                <label for="slider3">WHITE</label>
                 <input type="range" id="slider3" class="slider" min="0" max="255" value="0">
-                <label for="slider1">ROYAL BLUE</label>
+                <label for="slider4">ROYAL BLUE</label>
                 <input type="range" id="slider4" class="slider" min="0" max="255" value="0">
             </div>
             <p class="state">Values: <span id="values">0, 0, 0, 0</span></p>
@@ -132,11 +128,12 @@
             <p><strong>White (full spectrum) PPF:</strong> <span id="white-ppf">0</span> uMol/s, resistor: 6800 Ohms, max current: 480, estimated current: 160 mA, calculated current: </p>
             <p><strong>Royal Blue (440-455nm) PPF:</strong> <span id="royal-blue-ppf">0</span> uMol/s, resistor: 6800 Ohms, mac current: 240, estimated current: 160 mA, calculated current: </p>
             <br>
-            <label for="on-time">On time:</label>
-            <input type="text" id="on-time" name="on-time" placeholder="hh:mm">
-            <label for="off-time">Off time:</label>
-            <input type="text" id="off-time" name="off-time" placeholder="hh:mm">
-            <button onclick="saveTimes()">Save</button>
+            <label for="time-input">Turn on::</label>
+            <input type="time" id="on-time" name="time" min="00:00" max="23:59" value = "00:00" required>
+            <label for="time-input">Turn off::</label>
+            <input type="time" id="off-time" name="time" min="00:00" max="23:59" value = "00:00" required>
+            <br>
+            <p><button onclick="saveTimes()">Save</button></p>
         </div>
     </div>
     </div>
@@ -152,48 +149,123 @@
         var valuesSpan = document.getElementById('values');
         window.addEventListener('load', onLoad);
 
+        let payload = {
+            action: "",
+            drivers: {
+                firstDriver: {
+                    dutyCycle: "0"
+                },
+                secondDriver: {
+                    dutyCycle: "0"
+                },
+                thirdDriver: {
+                    dutyCycle: "0"
+                },
+                fourthDriver: {
+                    dutyCycle: "0"
+                },
+            },
+            time: {
+                onTime: "00:00",
+                offTime: "00:00"
+            }
+        };
+
         function initWebSocket() {
             console.log('Trying to open a WebSocket connection...');
             websocket = new WebSocket(gateway);
             websocket.onopen = function (event) {
                 console.log('WebSocket connection opened:', event);
             };
-            websocket.onmessage = function (event) {
-                console.log('WebSocket message received:', event);
+            websocket.onmessage = function(event) {
+                onMessage(event);
             };
+                
             websocket.onclose = function (event) {
                 console.log('WebSocket connection closed:', event);
                 setTimeout(initWebSocket, 2000);
             };
         }
 
-        function onLoad() {
-            for (var i = 0; i < sliders.length; i++) {
-                sliders[i].addEventListener('input', onSliderChange.bind(null, i));
-            }
-            initWebSocket();
-        }
-
-        function onSliderChange(sliderNum) {
-            var value = sliders[sliderNum].value;
+        function updateSliderText()
+        {
             valuesSpan.textContent = sliders.map(function (slider) {
                 return slider.value;
             }).join(', ');
-            sendSliderValue(value, sliderNum);
+        }
+
+        function onMessage()
+        {
+            console.log('WebSocket message received:', event);
+            const jsonObj = JSON.parse(event.data);
+            if(jsonObj.action == "dutyCycle")
+            {
+                setJsonDrivers(jsonObj);
+                setSliders();
+            }
+            else if(jsonObj.action == "time")
+            {
+                setJsonTime(jsonObj);
+            }
+            else if(jsonObj.action == "updateAll")
+            {
+                setJsonDrivers(jsonObj);
+                setSliders();
+                setJsonTime(jsonObj);
+            }
+            else console.log("unknown action: ", jsonObj.action);
+        }
+
+        function setJsonDrivers(jsonObj)
+        {
+            const driversJson = jsonObj.drivers;
+            payload.drivers.firstDriver.dutyCycle = driversJson.firstDriver.dutyCycle
+            payload.drivers.secondDriver.dutyCycle = driversJson.secondDriver.dutyCycle
+            payload.drivers.thirdDriver.dutyCycle = driversJson.thirdDriver.dutyCycle
+            payload.drivers.fourthDriver.dutyCycle = driversJson.fourthDriver.dutyCycle
+        }
+
+        function setJsonTime(jsonObj)
+        {
+            payload.time.onTime = jsonObj.time.onTime;
+            payload.time.offTime = jsonObj.time.offTime;
+            document.getElementById('on-time').value = payload.time.onTime;
+            document.getElementById('off-time').value = payload.time.offTime;
+        }
+
+        function setSliders()
+        {
+            sliders[0].value = payload.drivers.firstDriver.dutyCycle;
+            sliders[1].value = payload.drivers.secondDriver.dutyCycle;
+            sliders[2].value = payload.drivers.thirdDriver.dutyCycle;
+            sliders[3].value = payload.drivers.fourthDriver.dutyCycle;
+            updateSliderText();
+        }
+
+        function onLoad() {
+            for (var i = 0; i < sliders.length; i++) {
+                sliders[i].addEventListener('change', onSliderChange.bind(null, i));
+            }
+            updateSliderText();
+            initWebSocket();
+            
+        }
+
+        function onSliderChange(sliderNum) {
+            updateSliderText();
+            sendSliderValue(sliderNum);
             calculatePPF();
         }
 
-        function sendSliderValue(val, sliderNum) {
+        function sendSliderValue(sliderNum) {
+            //Fill in JSON and send to ESP32 over websocket
             if (websocket.readyState === WebSocket.OPEN) {
-                const json = {
-                    action: "dutyCycle",
-                    dutyCycle: {
-                        driver: sliderNum,
-                        value: val
-                    }
-                };
-                const jsonString = JSON.stringify(json);
-                websocket.send(jsonString);
+                payload.action = "dutyCycle";
+                payload.drivers.firstDriver.dutyCycle = sliders[0].value;
+                payload.drivers.secondDriver.dutyCycle = sliders[1].value;
+                payload.drivers.thirdDriver.dutyCycle = sliders[2].value;
+                payload.drivers.fourthDriver.dutyCycle = sliders[3].value;
+                websocket.send(JSON.stringify(payload));
             }
         }
 
@@ -236,15 +308,11 @@
         }
 
         function sendTimesToEsp32(onTime, offTime) {
-            // handle the WebSocket connection event
+            //Fill in JSON and send to ESP32 over websocket
             if (websocket.readyState === WebSocket.OPEN) {
-                // construct a JSON payload containing the on/off times
-                const payload = {
-                    on_time: onTime,
-                    off_time: offTime
-                };
-
-                // send the JSON payload to the ESP32
+                payload.action = "time";
+                payload.time.onTime = onTime;
+                payload.time.offTime = offTime;
                 websocket.send(JSON.stringify(payload));
             };
         }

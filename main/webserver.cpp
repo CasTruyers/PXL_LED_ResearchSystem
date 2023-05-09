@@ -9,8 +9,7 @@ struct async_resp_arg {
 };
 
 #define INDEX_HTML_PATH "/spiffs/index.html"
-char index_html[10000];
-char response_data[10000];
+char index_html[20000];
 
 // Read spiff and place index.html in buffer index_html
 static void initi_web_page_buffer(void)
@@ -46,57 +45,46 @@ esp_err_t get_req_handler(httpd_req_t *req)
     return httpd_resp_send(req, index_html, HTTPD_RESP_USE_STRLEN);
 }
 
-// Toggles LED and send led_state message
-// static void ws_async_send(void *arg)
-// {
-//     httpd_ws_frame_t ws_pkt;
-//     struct async_resp_arg *resp_arg = (struct async_resp_arg *) arg;
-//     httpd_handle_t hd = resp_arg->hd;
+void send_json_to_all_clients(httpd_handle_t hd, cJSON *object)
+{
+    char* json_str = cJSON_Print(object);
+    printf("json str: %s\n\r", json_str);
+    httpd_ws_frame_t ws_pkt;
+    ws_pkt.payload = (uint8_t *)json_str;
+    ws_pkt.len = strlen(json_str);
+    ws_pkt.type = HTTPD_WS_TYPE_TEXT;
 
-//     led_state = !led_state;
-//     if(led_state) LEDDrivers[2].setDuty(50);
-//     else LEDDrivers[2].setDuty(0);
-    
-//     char buff[4];
-//     memset(buff, 0, sizeof(buff));
-//     sprintf(buff, "%d",led_state);
-    
-//     memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
-//     ws_pkt.payload = (uint8_t *)buff;
-//     ws_pkt.len = strlen(buff);
-//     ws_pkt.type = HTTPD_WS_TYPE_TEXT;
-    
-//     static size_t max_clients = CONFIG_LWIP_MAX_LISTENING_TCP;
-//     size_t fds = max_clients;
-//     int client_fds[max_clients];
+    static size_t max_clients = CONFIG_LWIP_MAX_LISTENING_TCP;
+    size_t fds = max_clients;
+    int client_fds[max_clients];
 
-//     esp_err_t ret = httpd_get_client_list(server, &fds, client_fds);
-//     if (ret != ESP_OK) return;
+    esp_err_t ret = httpd_get_client_list(server, &fds, client_fds);
+    if (ret != ESP_OK) return;
 
-//     for (int i = 0; i < fds; i++) {
-//         int client_info = httpd_ws_get_fd_info(server, client_fds[i]);
-//         if (client_info == HTTPD_WS_CLIENT_WEBSOCKET) {
-//             httpd_ws_send_frame_async(hd, client_fds[i], &ws_pkt);
-//         }
-//     }
-//     free(resp_arg);
-// }
-
-// static esp_err_t trigger_async_send(httpd_handle_t handle, httpd_req_t *req)
-// {
-//     struct async_resp_arg *resp_arg = static_cast<async_resp_arg*>(malloc(sizeof(struct async_resp_arg)));
-//     resp_arg->hd = req->handle;
-//     resp_arg->fd = httpd_req_to_sockfd(req);
-//     return httpd_queue_work(handle, ws_async_send, resp_arg);
-//}
+    for (int i = 0; i < fds; i++) {
+        int client_info = httpd_ws_get_fd_info(server, client_fds[i]);
+        if (client_info == HTTPD_WS_CLIENT_WEBSOCKET) {
+            httpd_ws_send_frame_async(hd, client_fds[i], &ws_pkt);
+            printf("Sended to client\n\r");
+        }
+    }
+    printf("JSON sended to all clients\n\r");
+}
 
 static esp_err_t handle_ws_req(httpd_req_t *req)
 {
     if (req->method == HTTP_GET)
     {
         ESP_LOGI(TAG, "Handshake done, the new connection was opened");
+        cJSON *object = cJSON_CreateObject();
+        printf("getJsonFunc going in\n\r");
+        nvs_get_JSON(object);
+        printf("out of getJsonFunc\n\r");
+        send_json_to_all_clients(req->handle, object);
+        cJSON_Delete(object);
         return ESP_OK;
     }
+    
     httpd_ws_frame_t ws_pkt;
     uint8_t *buf = NULL;
     memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
@@ -144,23 +132,23 @@ static esp_err_t handle_ws_req(httpd_req_t *req)
         printf("Action: %s\n\r", actionValue);
         if(strcmp(actionValue, "dutyCycle") == 0)
         {
-            cJSON *dutyCycle = cJSON_GetObjectItem(object, "dutyCycle");
-            cJSON *driver = cJSON_GetObjectItem(dutyCycle, "driver");
-            cJSON *value = cJSON_GetObjectItem(dutyCycle, "value");
-            uint8_t driverVal = driver->valueint;
-            uint8_t dutyCycleVal = strtoul(value->valuestring, NULL, 10);
-            printf("driver %d: %d\n\r", driverVal, dutyCycleVal);
-            LEDDrivers[driverVal].setDuty(dutyCycleVal);
+            send_json_to_all_clients(req->handle, object);
+            cJSON *driversJson = cJSON_GetObjectItem(object, "drivers");
+            setDrivers(driversJson, 0);
         } 
+        else if(strcmp(actionValue, "time") == 0)
+        {
+            cJSON *timeJson = cJSON_GetObjectItem(object, "time");
+            nvs_save_time(timeJson);
+
+            char on_time[6], off_time[6];
+            nvs_load_on_time(on_time, sizeof(on_time)); 
+            nvs_load_off_time(off_time, sizeof(off_time)); 
+            printf("Loaded onTime: %s and offTime: %s to the NVS\n\r", on_time, off_time);
+        }
         else printf("action does not exist\n\r");
     }
     else printf("action not found\n\r");
-
-    // if (ws_pkt.type == HTTPD_WS_TYPE_TEXT && strcmp((char *)ws_pkt.payload, "toggle") == 0)
-    // {
-    //     free(buf);
-    //     return trigger_async_send(req->handle, req);
-    // }
 
     cJSON_Delete(object);
 
@@ -190,7 +178,7 @@ httpd_handle_t setup_websocket_server(void)
         httpd_register_uri_handler(server, &uri_get);
         httpd_register_uri_handler(server, &ws);
     }
-    printf("server: %p\n\r", server);
+
     return server;
 }
 
