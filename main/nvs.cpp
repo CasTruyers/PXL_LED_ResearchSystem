@@ -20,19 +20,21 @@ void nvs_save_time(cJSON *timeJson) {
     nvs_close(handle);
 }
 
-void nvs_load_time(cJSON *setTime, size_t max_length) {
+void nvs_load_time(cJSON *setTime) {
     char on_time[6], off_time[6];
+    size_t size = sizeof(on_time);
     nvs_handle_t handle;
     esp_err_t err = nvs_open("storage", NVS_READONLY, &handle);
     ESP_ERROR_CHECK(err);
-
-    err = nvs_get_str(handle, "on_time", on_time, &max_length);
+    printf("get str ontime\n\r");
+    err = nvs_get_str(handle, "on_time", on_time, &size);
     if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) ESP_ERROR_CHECK(err);
-
-    err = nvs_get_str(handle, "off_time", off_time, &max_length);
+    printf("get str offtime\n\r");
+    err = nvs_get_str(handle, "off_time", off_time, &size);
     if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) ESP_ERROR_CHECK(err);
-
+    printf("add ontime to object\n\r");
     cJSON_AddStringToObject(setTime, "onTime", on_time);
+    printf("add offtime to object\n\r");
     cJSON_AddStringToObject(setTime, "offTime", off_time);
 
     nvs_close(handle);
@@ -142,4 +144,23 @@ void nvs_load_drivers(cJSON *drivers)
     cJSON_AddItemToObject(drivers, "fourthDriver", fourth_driver_dc_obj);
 
     nvs_close(handle);
+}
+
+void nvs_get_JSON(cJSON *object)
+{
+    printf("\n\r");
+    cJSON *drivers = cJSON_CreateObject();
+    cJSON *time = cJSON_CreateObject();
+    printf("add action to object\n\r");
+    cJSON_AddStringToObject(object, "action", "updateAll");
+    printf("loading drivers\n\r");
+    nvs_load_drivers(drivers);
+    printf("add drivers ti object\n\r");
+    cJSON_AddItemToObject(object, "drivers", drivers);
+    printf("loading time\n\r");
+    nvs_load_time(time);
+    printf("Add settime to object\n\r");
+    cJSON_AddItemToObject(object, "setTime", time);
+    printf("printed JSON\n\r");
+    printf("JSON out of NVS: \n\r%s", cJSON_Print(object));
 }

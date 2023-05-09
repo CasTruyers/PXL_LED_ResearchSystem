@@ -1,7 +1,6 @@
 <html>
-
 <head>
-    <title>ESP32 Web Server</title>
+    <title>LED SYSTEM</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:,">
     <style>
@@ -97,9 +96,6 @@
         margin-top: 20px;
     }
     </style>
-    <title>ESP32 Web Server</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" href="data:,">
 </head>
 
 <body>
@@ -112,11 +108,11 @@
             <div class="slider-container">
                 <label for="slider1">FAR RED</label>
                 <input type="range" id="slider1" class="slider" min="0" max="255" value="0">
-                <label for="slider1">DEEP RED</label>
+                <label for="slider2">DEEP RED</label>
                 <input type="range" id="slider2" class="slider" min="0" max="255" value="0">
-                <label for="slider1">WHITE</label>
+                <label for="slider3">WHITE</label>
                 <input type="range" id="slider3" class="slider" min="0" max="255" value="0">
-                <label for="slider1">ROYAL BLUE</label>
+                <label for="slider4">ROYAL BLUE</label>
                 <input type="range" id="slider4" class="slider" min="0" max="255" value="0">
             </div>
             <p class="state">Values: <span id="values">0, 0, 0, 0</span></p>
@@ -151,6 +147,11 @@
         ];
         var valuesSpan = document.getElementById('values');
         window.addEventListener('load', onLoad);
+
+        let string1 = "%s";
+        let string2 = "%s";
+        let string3 = "%s";
+        let string4 = "%s";
 
         let payload = {
             action: "",
@@ -203,29 +204,51 @@
             const jsonObj = JSON.parse(event.data);
             if(jsonObj.action == "dutyCycle")
             {
-                const driversJson = jsonObj.drivers;
-                payload.drivers.firstDriver.dutyCycle = driversJson.firstDriver.dutyCycle
-                payload.drivers.secondDriver.dutyCycle = driversJson.secondDriver.dutyCycle
-                payload.drivers.thirdDriver.dutyCycle = driversJson.thirdDriver.dutyCycle
-                payload.drivers.fourthDriver.dutyCycle = driversJson.fourthDriver.dutyCycle
-                
-                sliders[0].value = payload.drivers.firstDriver.dutyCycle;
-                sliders[1].value = payload.drivers.secondDriver.dutyCycle;
-                sliders[2].value = payload.drivers.thirdDriver.dutyCycle;
-                sliders[3].value = payload.drivers.fourthDriver.dutyCycle;
-                updateSliderText();
+                setJsonDrivers(jsonObj);
+                setSliders();
             }
             else if(jsonObj.action == "setTime")
             {
-                //add code
+                setJsonTime();
+            }
+            else if(jsonObj.action == "updateAll")
+            {
+                setJsonDrivers(jsonObj);
+                setSliders();
+                setJsonTime();
             }
             else console.log("unknown action: ", jsonObj.action);
+        }
+
+        function setJsonDrivers(jsonObj)
+        {
+            const driversJson = jsonObj.drivers;
+            payload.drivers.firstDriver.dutyCycle = driversJson.firstDriver.dutyCycle
+            payload.drivers.secondDriver.dutyCycle = driversJson.secondDriver.dutyCycle
+            payload.drivers.thirdDriver.dutyCycle = driversJson.thirdDriver.dutyCycle
+            payload.drivers.fourthDriver.dutyCycle = driversJson.fourthDriver.dutyCycle
+        }
+
+        function setJsonTime(jsonObj)
+        {
+            payload.setTime.onTime = jsonObj.setTime.onTime
+            payload.setTime.offTime = jsonObj.setTime.offTime
+        }
+
+        function setSliders()
+        {
+            sliders[0].value = payload.drivers.firstDriver.dutyCycle;
+            sliders[1].value = payload.drivers.secondDriver.dutyCycle;
+            sliders[2].value = payload.drivers.thirdDriver.dutyCycle;
+            sliders[3].value = payload.drivers.fourthDriver.dutyCycle;
+            updateSliderText();
         }
 
         function onLoad() {
             for (var i = 0; i < sliders.length; i++) {
                 sliders[i].addEventListener('change', onSliderChange.bind(null, i));
             }
+            updateSliderText();
             initWebSocket();
             
         }
