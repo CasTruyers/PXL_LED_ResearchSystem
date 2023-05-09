@@ -128,10 +128,11 @@
             <p><strong>White (full spectrum) PPF:</strong> <span id="white-ppf">0</span> uMol/s, resistor: 6800 Ohms, max current: 480, estimated current: 160 mA, calculated current: </p>
             <p><strong>Royal Blue (440-455nm) PPF:</strong> <span id="royal-blue-ppf">0</span> uMol/s, resistor: 6800 Ohms, mac current: 240, estimated current: 160 mA, calculated current: </p>
             <br>
-            <p><label for="on-time">On time:</label>
-            <input type="text" id="on-time" name="on-time" placeholder="hh:mm"></p>
-            <p><label for="off-time">Off time:</label>
-            <input type="text" id="off-time" name="off-time" placeholder="hh:mm"></p>
+            <label for="time-input">Turn on::</label>
+            <input type="time" id="on-time" name="time" min="00:00" max="23:59" value = "00:00" required>
+            <label for="time-input">Turn off::</label>
+            <input type="time" id="off-time" name="time" min="00:00" max="23:59" value = "00:00" required>
+            <br>
             <p><button onclick="saveTimes()">Save</button></p>
         </div>
     </div>
@@ -147,11 +148,6 @@
         ];
         var valuesSpan = document.getElementById('values');
         window.addEventListener('load', onLoad);
-
-        let string1 = "%s";
-        let string2 = "%s";
-        let string3 = "%s";
-        let string4 = "%s";
 
         let payload = {
             action: "",
@@ -169,9 +165,9 @@
                     dutyCycle: "0"
                 },
             },
-            setTime: {
-                onTime: "",
-                offTime: ""
+            time: {
+                onTime: "00:00",
+                offTime: "00:00"
             }
         };
 
@@ -207,15 +203,15 @@
                 setJsonDrivers(jsonObj);
                 setSliders();
             }
-            else if(jsonObj.action == "setTime")
+            else if(jsonObj.action == "time")
             {
-                setJsonTime();
+                setJsonTime(jsonObj);
             }
             else if(jsonObj.action == "updateAll")
             {
                 setJsonDrivers(jsonObj);
                 setSliders();
-                setJsonTime();
+                setJsonTime(jsonObj);
             }
             else console.log("unknown action: ", jsonObj.action);
         }
@@ -231,8 +227,10 @@
 
         function setJsonTime(jsonObj)
         {
-            payload.setTime.onTime = jsonObj.setTime.onTime
-            payload.setTime.offTime = jsonObj.setTime.offTime
+            payload.time.onTime = jsonObj.time.onTime;
+            payload.time.offTime = jsonObj.time.offTime;
+            document.getElementById('on-time').value = payload.time.onTime;
+            document.getElementById('off-time').value = payload.time.offTime;
         }
 
         function setSliders()
@@ -312,9 +310,9 @@
         function sendTimesToEsp32(onTime, offTime) {
             //Fill in JSON and send to ESP32 over websocket
             if (websocket.readyState === WebSocket.OPEN) {
-                payload.action = "setTime";
-                payload.setTime.onTime = onTime;
-                payload.setTime.offTime = offTime;
+                payload.action = "time";
+                payload.time.onTime = onTime;
+                payload.time.offTime = offTime;
                 websocket.send(JSON.stringify(payload));
             };
         }

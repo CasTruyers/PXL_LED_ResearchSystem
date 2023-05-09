@@ -136,9 +136,9 @@ static esp_err_t handle_ws_req(httpd_req_t *req)
             cJSON *driversJson = cJSON_GetObjectItem(object, "drivers");
             setDrivers(driversJson, 0);
         } 
-        else if(strcmp(actionValue, "setTime") == 0)
+        else if(strcmp(actionValue, "time") == 0)
         {
-            cJSON *timeJson = cJSON_GetObjectItem(object, "setTime");
+            cJSON *timeJson = cJSON_GetObjectItem(object, "time");
             nvs_save_time(timeJson);
 
             char on_time[6], off_time[6];

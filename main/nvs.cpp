@@ -20,7 +20,7 @@ void nvs_save_time(cJSON *timeJson) {
     nvs_close(handle);
 }
 
-void nvs_load_time(cJSON *setTime) {
+void nvs_load_time(cJSON *timeJSON) {
     char on_time[6], off_time[6];
     size_t size = sizeof(on_time);
     nvs_handle_t handle;
@@ -33,9 +33,9 @@ void nvs_load_time(cJSON *setTime) {
     err = nvs_get_str(handle, "off_time", off_time, &size);
     if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) ESP_ERROR_CHECK(err);
     printf("add ontime to object\n\r");
-    cJSON_AddStringToObject(setTime, "onTime", on_time);
+    cJSON_AddStringToObject(timeJSON, "onTime", on_time);
     printf("add offtime to object\n\r");
-    cJSON_AddStringToObject(setTime, "offTime", off_time);
+    cJSON_AddStringToObject(timeJSON, "offTime", off_time);
 
     nvs_close(handle);
 }
@@ -93,16 +93,16 @@ void nvs_save_drivers(cJSON *driversJson)
     nvs_close(handle);
 }
 
-void nvs_load_drivers(cJSON *drivers)
+void nvs_load_drivers(cJSON *driversJson)
 {
     nvs_handle_t handle;
     esp_err_t err = nvs_open("storage", NVS_READWRITE, &handle);
     ESP_ERROR_CHECK(err);
 
-    cJSON *first_driver_dc_obj = cJSON_CreateObject();
-    cJSON *second_driver_dc_obj = cJSON_CreateObject();
-    cJSON *third_driver_dc_obj = cJSON_CreateObject();
-    cJSON *fourth_driver_dc_obj = cJSON_CreateObject();
+    cJSON *first_driver_dc_json = cJSON_CreateObject();
+    cJSON *second_driver_dc_json = cJSON_CreateObject();
+    cJSON *third_driver_dc_json = cJSON_CreateObject();
+    cJSON *fourth_driver_dc_json = cJSON_CreateObject();
 
     char first_driver_dc[4] = "0";
     char second_driver_dc[4] = "0";
@@ -134,33 +134,25 @@ void nvs_load_drivers(cJSON *drivers)
         err = nvs_set_str(handle, "fourthDriverDC", fourth_driver_dc);
         if (err != ESP_OK) printf("ERROR\n\r");}
 
-    cJSON_AddStringToObject(first_driver_dc_obj, "dutyCycle", first_driver_dc);
-    cJSON_AddStringToObject(second_driver_dc_obj, "dutyCycle", second_driver_dc);
-    cJSON_AddStringToObject(third_driver_dc_obj, "dutyCycle", third_driver_dc);
-    cJSON_AddStringToObject(fourth_driver_dc_obj, "dutyCycle", fourth_driver_dc);
-    cJSON_AddItemToObject(drivers, "firstDriver", first_driver_dc_obj);
-    cJSON_AddItemToObject(drivers, "secondDriver", second_driver_dc_obj);
-    cJSON_AddItemToObject(drivers, "thirdDriver", third_driver_dc_obj);
-    cJSON_AddItemToObject(drivers, "fourthDriver", fourth_driver_dc_obj);
+    cJSON_AddStringToObject(first_driver_dc_json, "dutyCycle", first_driver_dc);
+    cJSON_AddStringToObject(second_driver_dc_json, "dutyCycle", second_driver_dc);
+    cJSON_AddStringToObject(third_driver_dc_json, "dutyCycle", third_driver_dc);
+    cJSON_AddStringToObject(fourth_driver_dc_json, "dutyCycle", fourth_driver_dc);
+    cJSON_AddItemToObject(driversJson, "firstDriver", first_driver_dc_json);
+    cJSON_AddItemToObject(driversJson, "secondDriver", second_driver_dc_json);
+    cJSON_AddItemToObject(driversJson, "thirdDriver", third_driver_dc_json);
+    cJSON_AddItemToObject(driversJson, "fourthDriver", fourth_driver_dc_json);
 
     nvs_close(handle);
 }
 
 void nvs_get_JSON(cJSON *object)
 {
-    printf("\n\r");
     cJSON *drivers = cJSON_CreateObject();
     cJSON *time = cJSON_CreateObject();
-    printf("add action to object\n\r");
     cJSON_AddStringToObject(object, "action", "updateAll");
-    printf("loading drivers\n\r");
     nvs_load_drivers(drivers);
-    printf("add drivers ti object\n\r");
     cJSON_AddItemToObject(object, "drivers", drivers);
-    printf("loading time\n\r");
     nvs_load_time(time);
-    printf("Add settime to object\n\r");
-    cJSON_AddItemToObject(object, "setTime", time);
-    printf("printed JSON\n\r");
-    printf("JSON out of NVS: \n\r%s", cJSON_Print(object));
+    cJSON_AddItemToObject(object, "time", time);
 }
