@@ -132,6 +132,8 @@
             <input type="time" id="on-time" name="time" min="00:00" max="23:59" value = "00:00" required>
             <label for="time-input">Turn off::</label>
             <input type="time" id="off-time" name="time" min="00:00" max="23:59" value = "00:00" required>
+            <label for="time-input">current time::</label>
+            <input type="time" id="current-time" name="time" min="00:00" max="23:59" value = "00:00" required>            
             <br>
             <p><button onclick="saveTimes()">Save</button></p>
         </div>
@@ -166,6 +168,7 @@
                 },
             },
             time: {
+                currentTime: "00:00",
                 onTime: "00:00",
                 offTime: "00:00"
             }
@@ -212,6 +215,11 @@
                 setJsonDrivers(jsonObj);
                 setSliders();
                 setJsonTime(jsonObj);
+                setJsonCurrentTime(jsonObj);
+            }
+            else if(jsonObj.action == "currentTime")
+            {
+                setJsonCurrentTime(jsonObj);
             }
             else console.log("unknown action: ", jsonObj.action);
         }
@@ -231,6 +239,12 @@
             payload.time.offTime = jsonObj.time.offTime;
             document.getElementById('on-time').value = payload.time.onTime;
             document.getElementById('off-time').value = payload.time.offTime;
+        }
+        
+        function setJsonCurrentTime(jsonObj)
+        {
+            payload.time.currentTime = jsonObj.time.currentTime
+            document.getElementById('current-time').value = payload.time.currentTime
         }
 
         function setSliders()
@@ -302,17 +316,19 @@
             // get the values of the on/off time input fields
             const onTime = document.getElementById('on-time').value;
             const offTime = document.getElementById('off-time').value;
+            const currentTime = document.getElementById('current-time').value;
 
             // send the on/off times to the ESP32 over WebSocket
-            sendTimesToEsp32(onTime, offTime);
+            sendTimes(onTime, offTime, currentTime);
         }
 
-        function sendTimesToEsp32(onTime, offTime) {
+        function sendTimes(onTime, offTime, currentTime) {
             //Fill in JSON and send to ESP32 over websocket
             if (websocket.readyState === WebSocket.OPEN) {
                 payload.action = "time";
                 payload.time.onTime = onTime;
                 payload.time.offTime = offTime;
+                payload.time.currentTime = currentTime;
                 websocket.send(JSON.stringify(payload));
             };
         }

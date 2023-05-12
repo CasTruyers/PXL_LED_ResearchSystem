@@ -7,11 +7,14 @@ void nvs_save_time(cJSON *timeJson) {
 
     cJSON *onTime = cJSON_GetObjectItem(timeJson, "onTime");
     cJSON *offTime = cJSON_GetObjectItem(timeJson, "offTime");
-    printf("saving onTime:  %s and offTime: %s to the NVS\n\r", onTime->valuestring, offTime->valuestring);
+    cJSON *currentTime = cJSON_GetObjectItem(timeJson, "currentTime");
+    printf("saving onTime:  %s, offTime: %s and currentTime: %s to the NVS\n\r", onTime->valuestring, offTime->valuestring, currentTime->valuestring);
 
     err = nvs_set_str(handle, "on_time", onTime->valuestring);
     ESP_ERROR_CHECK(err);
     err = nvs_set_str(handle, "off_time", offTime->valuestring);
+    ESP_ERROR_CHECK(err);
+    err = nvs_set_str(handle, "current_time", currentTime->valuestring);
     ESP_ERROR_CHECK(err);
 
     err = nvs_commit(handle);
@@ -63,6 +66,19 @@ void nvs_load_off_time(char* off_time, size_t max_length) {
         ESP_ERROR_CHECK(err);
     }
 
+    nvs_close(handle);
+}
+
+void nvs_load_current_time(char* current_time, size_t max_length) {
+    nvs_handle_t handle;
+    esp_err_t err = nvs_open("storage", NVS_READONLY, &handle);
+    ESP_ERROR_CHECK(err);
+
+    err = nvs_get_str(handle, "current_time", current_time, &max_length);
+    if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) {
+        ESP_ERROR_CHECK(err);
+    }
+    
     nvs_close(handle);
 }
 
