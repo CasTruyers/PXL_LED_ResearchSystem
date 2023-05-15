@@ -71,50 +71,6 @@ void send_json_to_all_clients(httpd_handle_t hd, cJSON *object)
     printf("JSON sended to all clients\n\r");
 }
 
-void set_rtc_time(char *currentTime) {
-    struct tm timeinfo;
-    time_t now;
-    int hour, minute;
-
-    // Parse the time string
-    hour = atoi(currentTime);
-    minute = atoi(currentTime + 3);
-    printf("hour: %d, minute: %d\n\r", hour, minute);
-
-    timeinfo.tm_year = 2023 - 1900;   // Year: 2023
-    timeinfo.tm_mon = 4;               // Month: May (zero-based index)
-    timeinfo.tm_mday = 12;             // Day: 10
-    timeinfo.tm_hour = hour;             // Hour: 12 (24-hour format)
-    timeinfo.tm_min = minute;               // Minutes: 00
-    timeinfo.tm_sec = 0;               // Seconds: 00
-    timeinfo.tm_isdst = -1;            // Daylight Saving Time (DST) flag: -1 (unknown)
-
-    printf("hour: %d, minute: %d\n\r", timeinfo.tm_hour, timeinfo.tm_min);
-
-    // Convert the time to a time_t value
-    now = mktime(&timeinfo);
-
-    // Update the RTC
-    struct timeval tv = {
-        .tv_sec = now,
-        .tv_usec = 0
-    };
-
-    printf("timeval: %lld\n\r", tv.tv_sec);
-    settimeofday(&tv, NULL);
-}
-
-void print_current_time() {
-    time_t now;
-    struct tm timeinfo;
-    char strftime_buf[64];
-
-    // Get current time from RTC
-    time(&now);
-    localtime_r(&now, &timeinfo);
-    printf("time: %d:%d\n\r", timeinfo.tm_hour, timeinfo.tm_min);
-}
-
 static esp_err_t handle_ws_req(httpd_req_t *req)
 {
     if (req->method == HTTP_GET)
@@ -185,12 +141,10 @@ static esp_err_t handle_ws_req(httpd_req_t *req)
             cJSON *timeJson = cJSON_GetObjectItem(object, "time");
             nvs_save_time(timeJson);
 
-            char on_time[6], off_time[6], current_time[6];
+            char on_time[6], off_time[6];
             nvs_load_on_time(on_time, sizeof(on_time));
             nvs_load_off_time(off_time, sizeof(off_time));
-            nvs_load_current_time(current_time, sizeof(current_time));
-            set_rtc_time(current_time);
-            printf("Loaded onTime: %s, offTime: %s and current time: %s to the NVS\n\r", on_time, off_time, current_time);
+            printf("Loaded onTime: %s, offTime: %s from the NVS\n\r", on_time, off_time);
         }
         else printf("action does not exist\n\r");
     }

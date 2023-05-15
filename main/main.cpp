@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "softAP.hpp"
+#include "wifi.hpp"
 #include "webserver.hpp"
 #include "LEDdriver.hpp"
+#include "time.hpp"
 
 #include <string.h>
 #include <time.h>
@@ -28,10 +29,10 @@ static const char *TAG = "main";
 
 extern "C" void app_main(void)
 {   
-    ++boot_count;
-    ESP_LOGI(TAG, "Boot count: %d", boot_count);
-
+    time_t now;
+    struct tm timeinfo;
     static httpd_handle_t server = NULL;
+
     // initialize the GPIOs for the LED drivers
     esp_rom_gpio_pad_select_gpio(GPIO_NUM_15);
     esp_rom_gpio_pad_select_gpio(GPIO_NUM_5);
@@ -43,15 +44,27 @@ extern "C" void app_main(void)
       ESP_ERROR_CHECK(nvs_flash_erase());
       ret = nvs_flash_init();
     }
+
+    initialise_wifi();
+    ESP_LOGW(TAG, "Start APSTA Mode");
+	wifi_apsta(CONFIG_STA_CONNECT_TIMEOUT*1000);
     
     // Read/initialize the drivers NVS and set drivers dutycycle accordingly
     cJSON *driversJson = cJSON_CreateObject();
     setDrivers(driversJson, 1);
 
-    wifi_init_softap();
-
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_AP_STAIPASSIGNED, &connect_handler, &server));
-    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &server));
+
+    initialize_sntp();
+    time(&now);
+    localtime_r(&now, &timeinfo);
+    printf("%d\n\r", timeinfo.tm_year);
+    if (timeinfo.tm_year < (2016 - 1900)) {
+        printf("%d\n\r", timeinfo.tm_year);
+        ESP_LOGI(TAG, "Time is not set yet. Getting time over NTP.");
+        obtain_time();
+        time(&now); // update 'now' variable with current time
+    }
 
     while(true)
     {
