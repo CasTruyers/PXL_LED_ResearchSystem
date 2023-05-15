@@ -24,9 +24,7 @@ The weekly report of the projects developments can be found [here](./docs/weekly
 
 1. Install ESP-IDF framework: Follow the official ESP-IDF documentation to install the framework and set up the development environment.
 2. Clone the repository: Clone this repository to your local machine using Git.
-3. Customize firmware: Modify the code and configurations based on your specific requirements, such as light spectrum, intensity, and duration for your research on plant growth.
-4. Build and flash firmware: Use ESP-IDF tools to build and flash the firmware onto the ESP32 microcontroller.
-5. Monitor and debug: Monitor the output and behavior of the LED system using the ESP-IDF tools for debugging and troubleshooting as needed.
+3. Build and flash firmware: Use ESP-IDF tools to build and flash the firmware onto the ESP32 microcontroller.
 
 ## Contact Information
 
