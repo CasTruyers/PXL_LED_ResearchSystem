@@ -18,6 +18,7 @@ The date represents the day of adding the weeks information, usually monday or f
 8. [25/04/2023 - 01/05/2023](#01/05/2023)
 9. [01/05/2023 - 08/05/2023](#08/05/2023)
 10. [08/05/2023 - 15/05/2023](#15/05/2023)
+11. [15/05/2023 - 2/06/2023](#2/06/2023)
 
 ## 03/03/2023 <a name="03/03/2023"></a>
 
@@ -164,3 +165,7 @@ On Friday 28/04 I had a teams meeting for mid-term evaluation of the project.
 - Setting up station + acces-point wifi, previously only acces point. Now device can acces the internet when connected to station.
 - Now that we are connected to internet, we can get SNTP time.
 - Updating RTC with SNTP time
+
+## 15/05/2023 - 2/06/2023 <a name="2/06/2023"></a>
+
+For the last weeks of my project i have been testing the system and growing a spinach from seed. Everything is working, including the automatic day/night cycles. The spinach has been growing but not for long, now i have to break it down to fly back to belgium.
