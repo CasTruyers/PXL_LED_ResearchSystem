@@ -7,6 +7,8 @@ LEDDriver LEDDrivers[NUM_LEDS] = {
     LEDDriver(GPIO_NUM_19, LEDC_TIMER_0, LEDC_CHANNEL_3)
 };
 
+bool ledOn = true;
+
 // CLASS FUNCTIONS
 
 // Initialize the LED driver
@@ -57,6 +59,7 @@ void LEDDriver::setDuty(uint8_t dutyCycle)
     printf("dutycycle: %d\n\r", dutyCycle);
     ledc_set_duty(LEDC_LOW_SPEED_MODE, m_channel, dutyVal);
     ledc_update_duty(LEDC_LOW_SPEED_MODE, m_channel);
+    if(dutyCycle > 0) ledOn = true;
 }
 
 void LEDDriver::fade() {
@@ -87,31 +90,35 @@ void fadeAll(LEDDriver* leds) {
     }
 }
 
-void setDrivers(cJSON *driversJson, bool readNVS)
+void setDrivers()
 {
-    printf("Setting drivers\n\r");
-    if(readNVS)
-    {
-        printf("Reading NVS for drivers DC\n\r");
-        nvs_load_drivers(driversJson);
-        printf("%s",cJSON_Print(driversJson));
-    }
-    else nvs_save_drivers(driversJson);
+    printf("Reading NVS for drivers DC\n\r");
+    cJSON *driversJson = cJSON_CreateObject();
+    nvs_load_drivers(driversJson);
+    printf("%s",cJSON_Print(driversJson));
 
     cJSON *first_driver_dc_obj = cJSON_GetObjectItem(cJSON_GetObjectItem(driversJson, "firstDriver"), "dutyCycle");
     cJSON *second_driver_dc_obj = cJSON_GetObjectItem(cJSON_GetObjectItem(driversJson, "secondDriver"), "dutyCycle");
     cJSON *third_driver_dc_obj = cJSON_GetObjectItem(cJSON_GetObjectItem(driversJson, "thirdDriver"), "dutyCycle");
     cJSON *fourth_driver_dc_obj = cJSON_GetObjectItem(cJSON_GetObjectItem(driversJson, "fourthDriver"), "dutyCycle");
-    const uint8_t first_driver_dc = strtoul(first_driver_dc_obj->valuestring, NULL, 10);
-    const uint8_t second_driver_dc = strtoul(second_driver_dc_obj->valuestring, NULL, 10);
-    const uint8_t third_driver_dc = strtoul(third_driver_dc_obj->valuestring, NULL, 10);
-    const uint8_t fourth_driver_dc = strtoul(fourth_driver_dc_obj->valuestring, NULL, 10);
+    const uint8_t first_driver_dc = first_driver_dc_obj->valueint;
+    const uint8_t second_driver_dc = second_driver_dc_obj->valueint;
+    const uint8_t third_driver_dc = third_driver_dc_obj->valueint;
+    const uint8_t fourth_driver_dc = fourth_driver_dc_obj->valueint;
 
-    printf("Setting drivers DC1: %d, DC2: %d, DC3:%d, DC4: %d\n\r", first_driver_dc, second_driver_dc, third_driver_dc, fourth_driver_dc);
-
+    printf("Setting drivers: %d, %d, %d, %d\n\r", first_driver_dc_obj->valueint, second_driver_dc_obj->valueint, third_driver_dc_obj->valueint, fourth_driver_dc_obj->valueint);
     LEDDrivers[0].setDuty(first_driver_dc);
     LEDDrivers[1].setDuty(second_driver_dc);
     LEDDrivers[2].setDuty(third_driver_dc);
     LEDDrivers[3].setDuty(fourth_driver_dc);
-    printf("Drivers Set\n\r");
+    cJSON_Delete(driversJson);
+}
+
+void turnOffDrivers()
+{
+    LEDDrivers[0].setDuty(0);
+    LEDDrivers[1].setDuty(0);
+    LEDDrivers[2].setDuty(0);
+    LEDDrivers[3].setDuty(0);
+    ledOn = false;
 }

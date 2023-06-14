@@ -23,12 +23,10 @@
 #include "esp_err.h"
 #include "driver/rtc_io.h"
 
-RTC_DATA_ATTR static int boot_count = 0;
-
 static const char *TAG = "main";
 
 extern "C" void app_main(void)
-{   
+{  
     time_t now;
     struct tm timeinfo;
     static httpd_handle_t server = NULL;
@@ -48,27 +46,24 @@ extern "C" void app_main(void)
     initialise_wifi();
     ESP_LOGW(TAG, "Start APSTA Mode");
 	wifi_apsta(CONFIG_STA_CONNECT_TIMEOUT*1000);
-    
-    // Read/initialize the drivers NVS and set drivers dutycycle accordingly
-    cJSON *driversJson = cJSON_CreateObject();
-    setDrivers(driversJson, 1);
 
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_AP_STAIPASSIGNED, &connect_handler, &server));
 
     initialize_sntp();
     time(&now);
     localtime_r(&now, &timeinfo);
-    printf("%d\n\r", timeinfo.tm_year);
-    if (timeinfo.tm_year < (2016 - 1900)) {
-        printf("%d\n\r", timeinfo.tm_year);
+    if (timeinfo.tm_year < (2023 - 1900)) {
         ESP_LOGI(TAG, "Time is not set yet. Getting time over NTP.");
         obtain_time();
         time(&now); // update 'now' variable with current time
     }
 
+    check_time();
+    setDrivers();
+
     while(true)
     {
-        vTaskDelay(pdMS_TO_TICKS(10000));
-        print_current_time();
+        vTaskDelay(pdMS_TO_TICKS(60000));
+        check_time();
     }
 }

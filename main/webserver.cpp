@@ -3,10 +3,6 @@
 static const char *TAG = "webserver";
 int led_state = 0;
 httpd_handle_t server = NULL;
-struct async_resp_arg {
-    httpd_handle_t hd;
-    int fd;
-};
 
 #define INDEX_HTML_PATH "/spiffs/index.html"
 char index_html[20000];
@@ -45,9 +41,10 @@ esp_err_t get_req_handler(httpd_req_t *req)
     return httpd_resp_send(req, index_html, HTTPD_RESP_USE_STRLEN);
 }
 
-void send_json_to_all_clients(httpd_handle_t hd, cJSON *object)
+void send_json_to_all_clients(cJSON *object)
 {
-    char* json_str = cJSON_Print(object);
+
+    char *json_str = cJSON_Print(object);
     printf("json str: %s\n\r", json_str);
     httpd_ws_frame_t ws_pkt;
     ws_pkt.payload = (uint8_t *)json_str;
@@ -59,12 +56,15 @@ void send_json_to_all_clients(httpd_handle_t hd, cJSON *object)
     int client_fds[max_clients];
 
     esp_err_t ret = httpd_get_client_list(server, &fds, client_fds);
-    if (ret != ESP_OK) return;
+    if (ret != ESP_OK)
+        return;
 
-    for (int i = 0; i < fds; i++) {
+    for (int i = 0; i < fds; i++)
+    {
         int client_info = httpd_ws_get_fd_info(server, client_fds[i]);
-        if (client_info == HTTPD_WS_CLIENT_WEBSOCKET) {
-            httpd_ws_send_frame_async(hd, client_fds[i], &ws_pkt);
+        if (client_info == HTTPD_WS_CLIENT_WEBSOCKET)
+        {
+            httpd_ws_send_frame_async(server, client_fds[i], &ws_pkt);
             printf("Sended to client\n\r");
         }
     }
@@ -78,13 +78,14 @@ static esp_err_t handle_ws_req(httpd_req_t *req)
         ESP_LOGI(TAG, "Handshake done, the new connection was opened");
         cJSON *object = cJSON_CreateObject();
         printf("getJsonFunc going in\n\r");
-        nvs_get_JSON(object);
+        char action[10] = "updateAll";
+        nvs_get_JSON(object, action);
         printf("out of getJsonFunc\n\r");
-        send_json_to_all_clients(req->handle, object);
+        send_json_to_all_clients(object);
         cJSON_Delete(object);
         return ESP_OK;
     }
-    
+
     httpd_ws_frame_t ws_pkt;
     uint8_t *buf = NULL;
     memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
@@ -99,13 +100,13 @@ static esp_err_t handle_ws_req(httpd_req_t *req)
 
     if (ws_pkt.len)
     {
-        buf = static_cast<uint8_t*>(calloc(1, ws_pkt.len + 1));
+        buf = static_cast<uint8_t *>(calloc(1, ws_pkt.len + 1));
         if (buf == NULL)
         {
             ESP_LOGE(TAG, "Failed to calloc memory for buf");
             return ESP_ERR_NO_MEM;
         }
-        ws_pkt.payload = buf; //set to same point as buf
+        ws_pkt.payload = buf; // set to same point as buf
         ret = httpd_ws_recv_frame(req, &ws_pkt, ws_pkt.len);
         if (ret != ESP_OK)
         {
@@ -119,24 +120,27 @@ static esp_err_t handle_ws_req(httpd_req_t *req)
     ESP_LOGI(TAG, "frame len is %d", ws_pkt.len);
 
     // Parse JSON string into a cJSON object
-    cJSON *object = cJSON_ParseWithLength(reinterpret_cast<const char*>(ws_pkt.payload), ws_pkt.len);
+    cJSON *object = cJSON_ParseWithLength(reinterpret_cast<const char *>(ws_pkt.payload), ws_pkt.len);
 
-    if (object == nullptr) {
+    if (object == nullptr)
+    {
         printf("Failed to parse JSON string\n\r");
         return 1;
     }
 
     cJSON *action = cJSON_GetObjectItemCaseSensitive(object, "action");
-    if (cJSON_IsString(action)) {
-        char* actionValue = action->valuestring;
+    if (cJSON_IsString(action))
+    {
+        char *actionValue = action->valuestring;
         printf("Action: %s\n\r", actionValue);
-        if(strcmp(actionValue, "dutyCycle") == 0)
+        if (strcmp(actionValue, "dutyCycle") == 0)
         {
-            send_json_to_all_clients(req->handle, object);
+            send_json_to_all_clients(object);
             cJSON *driversJson = cJSON_GetObjectItem(object, "drivers");
-            setDrivers(driversJson, 0);
-        } 
-        else if(strcmp(actionValue, "time") == 0)
+            nvs_save_drivers(driversJson);
+            setDrivers();
+        }
+        else if (strcmp(actionValue, "time") == 0)
         {
             cJSON *timeJson = cJSON_GetObjectItem(object, "time");
             nvs_save_time(timeJson);
@@ -146,9 +150,11 @@ static esp_err_t handle_ws_req(httpd_req_t *req)
             nvs_load_off_time(off_time, sizeof(off_time));
             printf("Loaded onTime: %s, offTime: %s from the NVS\n\r", on_time, off_time);
         }
-        else printf("action does not exist\n\r");
+        else
+            printf("action does not exist\n\r");
     }
-    else printf("action not found\n\r");
+    else
+        printf("action not found\n\r");
 
     cJSON_Delete(object);
 
@@ -188,23 +194,28 @@ static esp_err_t stop_webserver(httpd_handle_t server)
     return httpd_stop(server);
 }
 
-void disconnect_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
+void disconnect_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
-    httpd_handle_t* server = (httpd_handle_t*) arg;
-    if (*server) {
+    httpd_handle_t *server = (httpd_handle_t *)arg;
+    if (*server)
+    {
         ESP_LOGI(TAG, "Stopping webserver");
-        if (stop_webserver(*server) == ESP_OK) {
+        if (stop_webserver(*server) == ESP_OK)
+        {
             *server = NULL;
-        } else {
+        }
+        else
+        {
             ESP_LOGE(TAG, "Failed to stop http server");
         }
     }
 }
 
-void connect_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
+void connect_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
-    httpd_handle_t* server = (httpd_handle_t*) arg;
-    if (*server == NULL) {
+    httpd_handle_t *server = (httpd_handle_t *)arg;
+    if (*server == NULL)
+    {
         ESP_LOGI(TAG, "Starting webserver");
         printf("In connect handler\r\n");
         initi_web_page_buffer();

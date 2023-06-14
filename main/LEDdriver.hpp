@@ -11,6 +11,8 @@
 
 #define NUM_LEDS 4
 
+extern bool ledOn;
+
 class LEDDriver {
 public:
     LEDDriver(gpio_num_t gpio, ledc_timer_t timer, ledc_channel_t channel);
@@ -24,6 +26,7 @@ private:
 };
 
 void fadeAll(LEDDriver* leds);
-void setDrivers(cJSON *driversJson, bool readNVS);
+void setDrivers();
+void turnOffDrivers();
 
 #endif // LED_DRIVER_HPP

@@ -2,7 +2,6 @@
 <head>
     <title>LED SYSTEM</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" href="data:,">
     <style>
         html {
             font-family: New Times Roman;
@@ -119,22 +118,25 @@
         </div>
         <div class="info-box">
             <h3>System Information</h3>
+            <p><strong>Status:</strong><span id="status"></span></p>
             <p><strong>Temperature:</strong> 23&deg;C</p>
             <p><strong>Humidity:</strong> 63%</p>
             <br>
             <p><strong>Total PPF:</strong> <span id="total-ppf">0</span> uMol/s</p>
-            <p><strong>Far Red (720-740nm) PPF:</strong> <span id="far-red-ppf">0</span> uMol/s, resistor: 6800 Ohms, max current: 300, estimated current: 160 mA, calculated current: </p>
-            <p><strong>Deep Red (650-670nm) PPF:</strong> <span id="deep-red-ppf">0</span> uMol/s, resistor: 6800 Ohms, max current: 250, estimated current: 160 mA, calculated current: </p>
-            <p><strong>White (full spectrum) PPF:</strong> <span id="white-ppf">0</span> uMol/s, resistor: 6800 Ohms, max current: 480, estimated current: 160 mA, calculated current: </p>
-            <p><strong>Royal Blue (440-455nm) PPF:</strong> <span id="royal-blue-ppf">0</span> uMol/s, resistor: 6800 Ohms, mac current: 240, estimated current: 160 mA, calculated current: </p>
+            <p><strong>Far Red (720-740nm) PPF:</strong> <span id="far-red-ppf">0</span> uMol/s</p>
+            <p><strong>Deep Red (650-670nm) PPF:</strong> <span id="deep-red-ppf">0</span> uMol/s</p>
+            <p><strong>White (full spectrum) PPF:</strong> <span id="white-ppf">0</span> uMol/s</p>
+            <p><strong>Royal Blue (440-455nm) PPF:</strong> <span id="royal-blue-ppf">0</span> uMol/s</p>
             <br>
-            <label for="time-input">Turn on::</label>
+            <label for="time-input">Turn on:</label>
             <input type="time" id="on-time" name="time" min="00:00" max="23:59" value = "00:00" required>
-            <label for="time-input">Turn off::</label>
+            <br>
+            <label for="time-input">Turn off:</label>
             <input type="time" id="off-time" name="time" min="00:00" max="23:59" value = "00:00" required>         
             <br>
             <p><button onclick="saveTimes()">Save</button></p>
         </div>
+        <canvas id="chart" width="500" height="200"></canvas>
     </div>
     </div>
     <script>
@@ -168,7 +170,8 @@
             time: {
                 onTime: "00:00",
                 offTime: "00:00"
-            }
+            },
+            status: ""
         };
 
         function initWebSocket() {
@@ -212,8 +215,26 @@
                 setJsonDrivers(jsonObj);
                 setSliders();
                 setJsonTime(jsonObj);
+                updateStatus(jsonObj);
+            }
+            else if(jsonObj.action == "status")
+            {
+                updateStatus(jsonObj);
             }
             else console.log("unknown action: ", jsonObj.action);
+        }
+
+        function updateStatus(jsonObj)
+        {
+            if(jsonObj.status == "ledOn")
+            {
+                var statusElement = document.getElementById("status").textContent = " ledOn";
+            }
+            else if(jsonObj.status == "ledOff")
+            {
+                var statusElement = document.getElementById("status").textContent = " ledOff";
+            }
+            else console.log("unknown status", jsonObj.status)
         }
 
         function setJsonDrivers(jsonObj)
@@ -233,6 +254,35 @@
             document.getElementById('off-time').value = payload.time.offTime;
         }
 
+        function calculatePPF() {
+            var farRed = sliders[0].value;
+            var deepRed = sliders[1].value;
+            var white = sliders[2].value;
+            var royalBlue = sliders[3].value;
+            
+            //Function to fine tune PPF estimation
+            var farRedPPF = (5.68/255) * farRed;
+            var deepRedPPF = (5.68/255) * deepRed;
+            var whitePPF = (7.3/255) * white;;
+            var royalBluePPF = (7.2/255) * royalBlue;;
+            const totalPPF = parseFloat(farRedPPF) + parseFloat(deepRedPPF) + parseFloat(whitePPF) + parseFloat(royalBluePPF);
+
+            var farRedPPFElement = document.querySelector("#far-red-ppf");
+            farRedPPFElement.textContent = farRedPPF.toFixed(2);
+
+            var deepRedPPFElement = document.querySelector("#deep-red-ppf");
+            deepRedPPFElement.textContent = deepRedPPF.toFixed(2);
+
+            var whitePPFElement = document.querySelector("#white-ppf");
+            whitePPFElement.textContent = whitePPF.toFixed(2);
+
+            var royalBluePPFElement = document.querySelector("#royal-blue-ppf");
+            royalBluePPFElement.textContent = royalBluePPF.toFixed(2);
+
+            var totalPPFElement = document.querySelector("#total-ppf");
+            totalPPFElement.textContent = totalPPF.toFixed(2);
+        }
+
         function setSliders()
         {
             sliders[0].value = payload.drivers.firstDriver.dutyCycle;
@@ -240,6 +290,7 @@
             sliders[2].value = payload.drivers.thirdDriver.dutyCycle;
             sliders[3].value = payload.drivers.fourthDriver.dutyCycle;
             updateSliderText();
+            calculatePPF()
         }
 
         function onLoad() {
@@ -248,7 +299,6 @@
             }
             updateSliderText();
             initWebSocket();
-            
         }
 
         function onSliderChange(sliderNum) {
@@ -267,35 +317,6 @@
                 payload.drivers.fourthDriver.dutyCycle = sliders[3].value;
                 websocket.send(JSON.stringify(payload));
             }
-        }
-
-        function calculatePPF() {
-            var farRed = sliders[0].value;
-            var deepRed = sliders[1].value;
-            var white = sliders[2].value;
-            var royalBlue = sliders[3].value;
-            
-            //Function to fine tune PPF estimation
-            var farRedPPF = farRed;
-            var deepRedPPF = deepRed;
-            var whitePPF = white;
-            var royalBluePPF = royalBlue;
-            const totalPPF = parseInt(farRedPPF) + parseInt(deepRedPPF) + parseInt(whitePPF) + parseInt(royalBluePPF);
-
-            var farRedPPFElement = document.querySelector("#far-red-ppf");
-            farRedPPFElement.textContent = farRedPPF;
-
-            var deepRedPPFElement = document.querySelector("#deep-red-ppf");
-            deepRedPPFElement.textContent = deepRedPPF;
-
-            var whitePPFElement = document.querySelector("#white-ppf");
-            whitePPFElement.textContent = whitePPF;
-
-            var royalBluePPFElement = document.querySelector("#royal-blue-ppf");
-            royalBluePPFElement.textContent = royalBluePPF;
-
-            var totalPPFElement = document.querySelector("#total-ppf");
-            totalPPFElement.textContent = totalPPF;
         }
 
         function saveTimes() {
@@ -317,6 +338,54 @@
             };
         }
 
+        // // Get the canvas element
+        // var canvas = document.getElementById("chart");
+
+        // // Define the data for the chart
+        // var data = {
+        //     labels: ["300nm", "310nm", "320nm", "330nm", "340nm", "350nm", "360nm", "370nm", "380nm", "390nm", "400nm"],
+        //     datasets: [
+        //     {
+        //         label: "Red",
+        //         data: [0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200],
+        //         borderColor: "red",
+        //         backgroundColor: "rgba(255, 0, 0, 0.3)"
+        //     },
+        //     {
+        //         label: "Blue",
+        //         data: [200, 180, 160, 140, 120, 100, 80, 60, 40, 20, 0],
+        //         borderColor: "blue",
+        //         backgroundColor: "rgba(0, 0, 255, 0.3)"
+        //     }
+        //     ]
+        // };
+
+        // // Create the chart
+        // var chart = new Chart(canvas, {
+        //     type: "line",
+        //     data: data,
+        //     options: {
+        //     responsive: true,
+        //     scales: {
+        //         x: {
+        //         display: true,
+        //         title: {
+        //             display: true,
+        //             text: "Wavelength (nm)"
+        //         }
+        //         },
+        //         y: {
+        //         display: true,
+        //         title: {
+        //             display: true,
+        //             text: "Intensity"
+        //         },
+        //         suggestedMin: 0,
+        //         suggestedMax: 200
+        //         }
+        //     }
+        //     }
+        // });
     </script>
 </body>
 

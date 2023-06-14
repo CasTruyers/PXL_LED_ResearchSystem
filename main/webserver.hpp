@@ -36,5 +36,6 @@ extern LEDDriver LEDDrivers[NUM_LEDS];
 void disconnect_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 void connect_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 void print_current_time();
+void send_json_to_all_clients(cJSON *object);
 
 #endif //WEBSERVER_HPP

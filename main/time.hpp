@@ -15,6 +15,9 @@
 #include "nvs_flash.h"
 #include "protocol_examples_common.h"
 #include "esp_sntp.h"
+#include "nvs.hpp"
+#include "webserver.hpp"
+#include "LEDdriver.hpp"
 
 #ifndef INET6_ADDRSTRLEN
 #define INET6_ADDRSTRLEN 48
@@ -23,5 +26,6 @@
 void print_current_time();
 void obtain_time(void);
 void initialize_sntp(void);
+void check_time();
 
 #endif //TIME_HPP
