@@ -14,7 +14,6 @@ The weekly report of the projects developments can be found [here](./docs/weekly
 - Implements custom firmware for controlling the LED system.
 - Interaction with LED_Drivers in OOP style.
 - Web interface for controlling the light spectrum, intensity, and duration, tailored for research purposes.
-- Offers a user-friendly interface for programming and debugging using popular code editors such as VSCode with the ESP-IDF extension.
 
 ## Dependencies
 
