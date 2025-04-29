@@ -1,4 +1,6 @@
-# Project Title
+# LED Research System
+
+Read the Application Note [here!](./docs/AN_2223_12001510_Cas_Truyers_ENG.pdf)
 
 ## Overview
 
